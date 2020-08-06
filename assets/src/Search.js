@@ -267,7 +267,7 @@ class Search extends React.Component {
     render() {
         let metaTitle = "Making Do Recipes"; // These should match what we set initially in index.html
         let metaDescription = "Find delicious recipes to make that are compatible with your or your child's allergies.";
-        let metaImg = "/logo.png"; 
+        let metaImg = "https://makingdorecipes.com/logo.png"; 
 
         return <div className="Search">
             <Helmet>
