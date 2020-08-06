@@ -19,6 +19,7 @@ const ELASTICSEARCH_FUZZINESS = "AUTO";
 const HTTP_OK = 200;
 const HTTP_SEMANTIC_ERROR = 422;
 const HTTP_UNAUTHORIZED = 401;
+const REDIRECT = 301;
 const SUCCESS = "success";
 const FAILURE = "failure";
 const TOKEN_COOKIE = "making-do-recipes-token";
@@ -33,6 +34,23 @@ const client = new elasticsearch.Client({
     apiVersion: '7.2'
 });
 const app = express();
+// Redirect the app
+app.use((req,res,next) => {
+    // HTTPs
+    if (!req.secure && req.get('x-forwarded-proto') !== 'https' && process.env.NODE_ENV !== "development") {
+        return res.redirect(REDIRECT, 'https://' + req.get('host') + req.url);
+    }
+    // www
+    if (req.header("host").slice(0, 4) === 'www.') {
+        let newHost = req.header("host").slice(4);
+        return res.redirect(REDIRECT, req.protocol + '://' + newHost + req.originalUrl);
+    }
+    // heroku
+    if (req.header("host").match(/^herokuapp\..*/i)) {
+        res.redirect(REDIRECT, req.protocol + '://makingdorecipes.com' + req.url);
+    }
+    next();
+});
 app.use( express.json() );
 app.use(cookieParser());
 app.use("/", express.static("assets/build"));
