@@ -13,7 +13,7 @@ const cookieParser = require("cookie-parser");
 const pluralize = require("pluralize");
 const striptags = require("striptags");
 
-const PORT=80;
+const PORT=process.env.PORT || 80;
 const ELASTICSEARCH_INDEX = "recipe";
 const ELASTICSEARCH_FUZZINESS = "AUTO";
 const HTTP_OK = 200;
