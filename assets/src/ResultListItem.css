@@ -1,5 +1,9 @@
 .ResultListItemOption {
-    display: inline-block;
+    display: inline;
+}
+
+.ResultListItemOption:not(:first-child) {
+    font-size: 85%;
 }
 
 .ResultListItemAllergens {

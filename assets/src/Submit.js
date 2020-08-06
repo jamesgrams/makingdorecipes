@@ -236,6 +236,7 @@ class Submit extends React.Component {
                     onlyUnique="true"
                     name={"option-allergens-" + index + "-" + index2}
                     value={allergens}
+                    addOnBlur={true}
                     onChange={(allergens) => {
                         let ingredients = this.state.ingredients;
                         ingredients[index].option[index2].allergen = allergens.map((el) => {return {"name": el}});
@@ -371,6 +372,7 @@ class Submit extends React.Component {
                     onlyUnique="true"
                     name="tags"
                     value={this.state.tags}
+                    addOnBlur={true}
                     onChange={(tags) => {
                         this.setStateAndMaskAlert({tags: tags})
                     }} />
@@ -400,7 +402,7 @@ class Submit extends React.Component {
                 init={{
                     valid_elements: "ul,ol,li,p,pre,blockquote,div,span,br,sub,em,strong,sup,code,h1,h2,h3,h4,h5,h6",
                     font_formats: "Merriweather=merriweather",
-                    content_style: "body {font-family:Merriweather}"
+                    content_style: "body {font-family:Merriweather;font-size:16px}"
                 }}
                 apiKey={process.env.REACT_APP_TINY_KEY}
             >

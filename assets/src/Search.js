@@ -96,7 +96,7 @@ class Search extends React.Component {
             "safesMode": params.get("safesMode") === "false" ? false : true,
             "tags": params.get("tags") ? params.get("tags").split(",") : [],
             "flexibility": params.get("flexibility") || 0, // these first five are for the form
-            "moreShown": params.get("tags") || params.get("flexibility") ? true : false,
+            "moreShown": params.get("tags") || params.get("flexibility") || params.get("unapproved") ? true : false,
             "unapproved": params.get("unapproved") === "true" ? true : false, // default to false
             "resultsShown": params.get("resultsShown") === "true" ? true : false, // default to false
         };
@@ -345,6 +345,7 @@ class Search extends React.Component {
                             onlyUnique="true"
                             name="items"
                             value={this.state.items}
+                            addOnBlur={true}
                             onChange={(tags) => this.setState({items: tags})} />
                     </label>
                 </div>
@@ -357,6 +358,7 @@ class Search extends React.Component {
                             onlyUnique="true"
                             name="tags"
                             value={this.state.tags}
+                            addOnBlur={true}
                             onChange={(tags) => this.setState({tags: tags})} />
                     </label>
                     <label className="SeachFlexibilityLabel" title="Allow for this number of bad ingredients">

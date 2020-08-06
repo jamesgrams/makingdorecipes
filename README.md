@@ -18,9 +18,7 @@ An Elasticsearch and React App to find and share recipes for people with allergi
 * `NODE_ENV` - Set to to `development` to avoid the HTTPS redirect
 
 ## Admin Login
-Run the following in the console on the site:
-`fetch("/login", {method: 'POST',headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ "username": <USERNAME>, "password": <PASSWORD> }) } );`
-Replacing `<USERNAME>` and `<PASSWORD>` accordingly. A cookie will be set appropriately. You will then be allowed to search for unapproved recipes, edit recipes, delete recipes, and approve recipes. To approve a recipe, simply edit and submit it while logged in.
+Visit `/login.html` and login. A cookie will be set appropriately. You will then be allowed to search for unapproved recipes, edit recipes, delete recipes, and approve recipes. To approve a recipe, simply edit and submit it while logged in.
 
 ## Development
 When you run `npm install` it will build the react app present in `/assets`. You may want to run the react server, so you get nice features such as auto-refresh. To do this, simply `cd` to `/assets` and run `npm start` while the main server is also running. You will want to set the `DEVELOPMENT` environment variable.

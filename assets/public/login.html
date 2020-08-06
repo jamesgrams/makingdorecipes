@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="robots" content="noindex">
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <link href="https://fonts.googleapis.com/css2?family=Merriweather&display=swap" rel="stylesheet">
+    <title>Login - Making Do Recipes</title>
+  </head>
+  <body>
+    <form>
+        <label for="username">
+            <input type="text" name="username"/>
+        </label>
+        <label for="password">
+            <input type="password" name="password"/>
+        </label>
+        <button>Login</button>
+    </form>
+    <button id="logout" style="margin-top:20px;">Logout</button>
+    <script>
+        document.querySelector("button").onclick = function(e) {
+            e.preventDefault();
+            fetch("/login", {
+                method: "POST",
+                body: JSON.stringify({
+                    username: document.querySelector("input[name='username']").value,
+                    password: document.querySelector("input[name='password']").value
+                }), 
+                headers: {'Content-Type': 'application/json'} 
+            });
+        }
+        document.querySelector("#logout").onclick = function() {
+            document.cookie.split(";").forEach(function(c) { document.cookie = c.replace(/^ +/, "").replace(/=.*/, "=;expires=" + new Date().toUTCString() + ";path=/"); });
+        }
+    </script>
+  </body>
+</html>

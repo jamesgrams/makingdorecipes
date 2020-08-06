@@ -1,5 +1,6 @@
 * {
     font-family: 'Merriweather', serif;
+    font-size: 16px;
 }
 
 header {
@@ -140,4 +141,8 @@ input[type="radio"] {
     margin-left: 10px;
     padding: 10px;
     flex-grow: 1;
+}
+
+input[type="search"] {
+    -webkit-appearance: none;
 }

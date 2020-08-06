@@ -4,14 +4,7 @@
  */
 
  // TODO fix logo
- // TODO add form doesn't look great on iPhone
- // TODO easier login
- // TODO iphone work. no curved inputs and no zoom in (bigger font size)
- // TODO custom error
  // TODO crawler for facebook not getting proper recipe description
- // TODO instructions that allergens must become tags?
- // TODO make substitutes less prominent
- // TODO should more shown be in the url? no but we should include unapproved as once of the triggers.
  // TODO contact us
 
 /******************************************* Constants *********************************************/
@@ -30,7 +23,8 @@ const ELASTICSEARCH_FUZZINESS = "AUTO";
 const HTTP_OK = 200;
 const HTTP_SEMANTIC_ERROR = 422;
 const HTTP_UNAUTHORIZED = 401;
-const REDIRECT = 301;
+const HTTP_NOT_FOUND = 404;
+const HTTP_REDIRECT = 301;
 const SUCCESS = "success";
 const FAILURE = "failure";
 const TOKEN_COOKIE = "making-do-recipes-token";
@@ -49,16 +43,16 @@ const app = express();
 app.use((req,res,next) => {
     // HTTPs
     if (!req.secure && req.get('x-forwarded-proto') !== 'https' && process.env.NODE_ENV !== "development") {
-        return res.redirect(REDIRECT, 'https://' + req.get('host') + req.url);
+        return res.redirect(HTTP_REDIRECT, 'https://' + req.get('host') + req.url);
     }
     // www
     if (req.header("host").slice(0, 4) === 'www.') {
         let newHost = req.header("host").slice(4);
-        return res.redirect(REDIRECT, req.protocol + '://' + newHost + req.originalUrl);
+        return res.redirect(HTTP_REDIRECT, req.protocol + '://' + newHost + req.originalUrl);
     }
     // heroku
     if (req.header("host").match(/herokuapp\..*/i)) {
-        res.redirect(REDIRECT, req.protocol + '://makingdorecipes.com' + req.url);
+        res.redirect(HTTP_REDIRECT, req.protocol + '://makingdorecipes.com' + req.url);
     }
     next();
 });
@@ -67,6 +61,11 @@ app.use(cookieParser());
 app.use("/", express.static("assets/build"));
 app.use("/add", express.static("assets/build/index.html"));
 app.use("/recipe/*", express.static("assets/build/index.html"));
+
+//The 404 Route (ALWAYS Keep this as the last route)
+app.get('*', function(req, res){
+    res.status(HTTP_NOT_FOUND).send("404 - Uh oh! It looks like you are lost. <a href='/'>Click here to go to the Homepage.</a>");
+});
 
 /******************************************* Endpoints *********************************************/
 
