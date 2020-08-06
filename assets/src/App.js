@@ -14,6 +14,9 @@ class App extends React.Component {
                     <Search></Search>
                 </main>
             </div>
+            <footer>
+                &copy; {new Date().getFullYear()} Making Do Recipes * <a href='mailto:admin@makingdorecipes.com'>Contact Us</a>
+            </footer>
         </Router>
     }
 }

@@ -5,7 +5,6 @@
 
  // TODO fix logo
  // TODO crawler for facebook not getting proper recipe description
- // TODO contact us
 
 /******************************************* Constants *********************************************/
 
