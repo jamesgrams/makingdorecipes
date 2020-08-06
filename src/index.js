@@ -62,11 +62,6 @@ app.use("/", express.static("assets/build"));
 app.use("/add", express.static("assets/build/index.html"));
 app.use("/recipe/*", express.static("assets/build/index.html"));
 
-//The 404 Route (ALWAYS Keep this as the last route)
-app.get('*', function(req, res){
-    res.status(HTTP_NOT_FOUND).send("404 - Uh oh! It looks like you are lost. <a href='/'>Click here to go to the Homepage.</a>");
-});
-
 /******************************************* Endpoints *********************************************/
 
 // get recipes
@@ -198,6 +193,11 @@ app.delete("/recipe", async function(request, response) {
         writeResponse(response, FAILURE, null, HTTP_SEMANTIC_ERROR);
     }
 } );
+
+//The 404 Route (ALWAYS Keep this as the last route)
+app.get('*', function(req, res){
+    res.status(HTTP_NOT_FOUND).send("404 - Uh oh! It looks like you are lost. <a href='/'>Click here to go to the Homepage.</a>");
+});
 
 // listen
 app.listen(PORT);
