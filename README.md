@@ -15,7 +15,7 @@ An Elasticsearch and React App to find and share recipes for people with allergi
 * `ADMIN_PASSWORD` - MD5 hex of the admin password
 * `TOKEN_KEY` - Key to create token cookie for login
 * `REACT_APP_TINY_KEY` - API key for Tiny Cloud
-* `DEVELOPMENT` - Set to to true to avoid the HTTPS redirect
+* `NODE_ENV` - Set to to `development` to avoid the HTTPS redirect
 
 ## Admin Login
 Run the following in the console on the site:

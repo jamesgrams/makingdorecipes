@@ -3,6 +3,13 @@
  * @author  James Grams
  */
 
+ // TODO fix logo
+ // TODO add form doesn't look great on iPhone
+ // TODO easier login
+ // TODO make sure www is working
+ // TODO iphone work. no curved inputs and no zoom in (bigger font size)
+ // TODO custom error
+
 /******************************************* Constants *********************************************/
 
 const express = require('express');
@@ -54,6 +61,8 @@ app.use((req,res,next) => {
 app.use( express.json() );
 app.use(cookieParser());
 app.use("/", express.static("assets/build"));
+app.use("/add", express.static("assets/build/index.html"));
+app.use("/recipe/*", express.static("assets/build/index.html"));
 
 /******************************************* Endpoints *********************************************/
 
