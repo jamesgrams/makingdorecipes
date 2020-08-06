@@ -4,9 +4,10 @@ An Elasticsearch and React App to find and share recipes for people with allergi
 
 ## Run
 1. Clone this repo and `cd` into it.
-2. Set environment variables. (Important to do this before 3, because the following step will build the React app which looks at environment variables)
-3. `npm install`
-4. `npm start`
+2. Make sure Elasticsearch is setup. You will need to `PUT /recipe` the contents of `mappings/mapping.json`.
+3. Set environment variables. (Important to do this before 3, because the following step will build the React app which looks at environment variables)
+4. `npm install`
+5. `npm start`
 
 ## Environment Variables
 `ELASTICSEARCH_HOST` - The Elasticsearch connection string
