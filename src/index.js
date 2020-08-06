@@ -46,7 +46,7 @@ app.use((req,res,next) => {
         return res.redirect(REDIRECT, req.protocol + '://' + newHost + req.originalUrl);
     }
     // heroku
-    if (req.header("host").match(/^herokuapp\..*/i)) {
+    if (req.header("host").match(/herokuapp\..*/i)) {
         res.redirect(REDIRECT, req.protocol + '://makingdorecipes.com' + req.url);
     }
     next();
