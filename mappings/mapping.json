@@ -1,0 +1,42 @@
+{
+    "mappings": {
+        "properties": {
+            "approved": { "type": "boolean" },
+            "name": { "type": "text", "analyzer": "english", "fields": { "sayt": {"type":"search_as_you_type" } } },
+            "credit": {
+                "type": "nested",
+                "properties": {
+                    "name": { "type": "text" },
+                    "link": { "type": "keyword" }
+                }
+            },
+            "tag": {
+                "type": "nested",
+                "properties": {
+                    "name": { "type": "text", "analyzer": "english", "fields": { "sayt": { "type":"search_as_you_type"}, "keyword" : { "type":"keyword" } } }
+                }
+            },
+            "steps": { "type": "text", "index": false },
+            "ingredient": {
+                "type": "nested",
+                "properties": {
+                    "option": {
+                        "type": "nested",
+                        "properties": {
+                            "name": { "type": "text", "analyzer": "english", "fields": { "sayt": { "type": "search_as_you_type" } } },
+                            "name_suggestable": { "type": "keyword" },
+                            "quantity": { "type": "text" },
+                            "allergen": {
+                                "type": "nested",
+                                "properties": {
+                                    "name": { "type": "text", "analyzer": "english", "fields": { "sayt": { "type": "search_as_you_type" } } },
+                                    "name_suggestable": { "type": "keyword" }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+}

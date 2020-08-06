@@ -1,0 +1,457 @@
+{
+    "name": "Cookies",
+    "ingredient": [
+        {
+            "name": "Chocolate Milk",
+            "quantity": 1,
+            "allergen": ["Milk","Cocoa"]
+        },
+        {
+            "name": "Eggs",
+            "quantity": 2,
+            "allergen": ["Eggs"]
+        }
+    ]
+}
+
+{
+    "name": "Cake",
+    "ingredient": [
+        {
+            "name": "Milk",
+            "quantity": 1,
+            "allergen": ["Milk"]
+        }
+    ]
+}
+
+{
+    "name": "Ice Cream",
+    "ingredient": [
+        {
+            "name": "Chocolate Milk",
+            "quantity": 1,
+            "allergen": ["Milk", "Cocoa"]
+        }
+    ]
+}
+
+{
+    "query": {
+        "match_all": {}
+    }
+}
+
+// Get all items that do not have milk in them
+// We find all items that have milk in them, and negate the result
+{
+    "query": {
+        "bool": {
+            "must_not": {
+                "nested": {
+                    "path": "ingredient",
+                    "query": {
+                        "bool": {
+                            "must": {
+                                "match": {"ingredient.allergen": "Milk"}
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
+
+// Get all items for which all ingredients contain milk
+// We do this by finding items with an ingredient that does not contain milk (must not is true in the array, because at least one item matches the must not)
+// and then we invert the result
+// this can be expanded to say "Get all items for which all ingredients contain either milk, eggs, etc."
+// the problem then becomes how can we do what is said in the line above followed by "and only"
+// To do that, we have to be able to get must_not to be true on the allergen field, which can only be the case if it is a nested object and not an array
+// since an array will match, but, but a nested object we will be querying each item, and thus we will find one allergen that does not match. Then, since we
+// return all parents with a nested query, we will be able to find ingredeints with at least one allergen that does not match and then negate that result
+// to get allergens that all match.
+{
+    "query": {
+        "bool": {
+            "must_not": {
+                "nested": {
+                    "path": "ingredient",
+                    "query": {
+                        "bool": {
+                            "must_not": {
+                                "match": {"ingredient.allergen": "Milk"}
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
+
+// All recipes that contain milk
+// All recipes where every ingredient contains milk (negated = NO ingredients contain milk)
+// All recipes where all ingredients ARE milk ALONE (negated = ingredients where milk is not the sole ingredient)
+
+{
+    "name": "Cookies",
+    "tag": ["dessert","snack"],
+    "ingredient": [
+        {
+            "option": [
+                {
+                    "name": "Chocolate Milk",
+                    "quantity": 1,
+                    "allergen": [
+                        {"name": "Milk"},
+                        {"name": "Cocoa"}
+                    ]
+                },
+                {
+                    "name": "Coconut Chocolate Milk",
+                    "quantity": 1,
+                    "allergen": [
+                        {"name": "Coconut"},
+                        {"name": "Cocoa"}
+                    ]
+                }
+            ]
+        },
+        {
+            "option": {
+                "name": "Eggs",
+                "quantity": 2,
+                "allergen": {"name":"Eggs"}
+            }
+        }
+    ]
+}
+
+{
+    "name": "Cake",
+    "tag": ["dessert","tea"],
+    "ingredient": [
+        {
+            "option": {
+                "name": "Milk",
+                "quantity": 2,
+                "allergen": {"name":"Milk"}
+            }
+        }
+    ]
+}
+
+{
+    "name": "Ice Cream",
+    "tag": ["dessert"],
+    "ingredient": [
+        {
+            "option": [
+                {
+                    "name": "Chocolate Milk",
+                    "quantity": 1,
+                    "allergen": [
+                        {"name": "Milk"},
+                        {"name": "Cocoa"}
+                    ]
+                },
+                {
+                    "name": "Coconut Chocolate Milk",
+                    "quantity": 1,
+                    "allergen": [
+                        {"name": "Coconut"},
+                        {"name": "Cocoa"}
+                    ]
+                }
+            ]
+        }
+    ]
+}
+
+{
+    "name": "Coconut",
+    "tag": ["snack","fruit"],
+    "ingredient": [
+        {
+            "option": {
+                "name": "Coconut",
+                "quantity": 2,
+                "allergen": {"name":"Coconut"}
+            }
+        }
+    ]
+}
+
+
+// This has Cocoa and Coconut as safes
+// Just remember: where all have == not where at least one does not have - that's how you make sure all items match in elasticsearch.
+// "Get recipes where all ingredients have at least one option that have all allergens listed as safe" (these are when the user selects items to be safes)
+// == "Get recipes where (NOT) that have one ingredient that does (NOT) have at least one option that has (NOT) at least one allergen (NOT) listed as safe.
+// Note that the should query could be just entries in the must_not array as its parent because !(a || b) == (!a && !b), but this allows us to use minimum_should_match
+// which allows us to allow one or two non-safes
+{
+    "query": {
+        "bool": {
+            "must_not": {
+                "nested": {
+                    "path": "ingredient",
+                    "query": {
+                        "bool": {
+                            "must_not": {
+                                "nested": {
+                                    "path": "ingredient.option",
+                                    "query": {
+                                        "bool": {
+                                            "must_not": {
+                                                "nested": {
+                                                    "path": "ingredient.option.allergen",
+                                                    "query": {
+                                                        "bool": {
+                                                            "must_not": [
+                                                                        {"match": {"ingredient.option.allergen.name": "Coconut"}},
+                                                                        {"match": {"ingredient.option.allergen.name": "Cocoa"}}
+                                                            ]
+                                                        }
+                                                    }
+                                                }
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
+
+// which ingredients that do not match shown with inner_hits
+{
+    "query": {
+        "nested": {
+            "path": "ingredient",
+            "inner_hits": {},
+            "query": {
+                "bool": {
+                    "must_not": {
+                        "nested": {
+                            "path": "ingredient.option",
+                            "query": {
+                                "bool": {
+                                    "must_not": {
+                                        "nested": {
+                                            "path": "ingredient.option.allergen",
+                                            "query": {
+                                                "bool": {
+                                                    "must_not": [
+                                                                {"match": {"ingredient.option.allergen.name": "Coconut"}},
+                                                                {"match": {"ingredient.option.allergen.name": "Cocoa"}}
+                                                    ]
+                                                }
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
+
+// THIS QUERY WILL GET US THE NUMBER OF BAD INGREDIENTS BY LOOKING AT THE TOTAL NUMBER OF INNER HITS
+// The query above basically gets all the items with bad ingredients and then negates the results with a bool and must not.
+// Well, we can simply just get the bad ingredients. Then we can filter on items that only have say 1 bad ingredient
+// https://www.elastic.co/guide/en/elasticsearch/reference/current/query-dsl-function-score-query.html#function-script-score
+// we could put inner_hits right under path: ingredient, but this does what we want - we follow the advice in the link
+// to basically filter on the number of inner hits which allows us to set a threshold.
+{
+    "query": {
+        "function_score": {
+            "query": {
+                "nested": {
+                    "path": "ingredient",
+                    "score_mode": "sum",
+                    "query": {
+                        "constant_score": {
+                            "boost": 1,
+                            "filter": {
+                                "bool": {
+                                    "must_not": {
+                                        "nested": {
+                                            "path": "ingredient.option",
+                                            "query": {
+                                                "bool": {
+                                                    "must_not": {
+                                                        "nested": {
+                                                            "path": "ingredient.option.allergen",
+                                                            "query": {
+                                                                "bool": {
+                                                                    "must_not": [
+                                                                                {"match": {"ingredient.option.allergen.name": "Milk"}}
+                                                                    ]
+                                                                }
+                                                            }
+                                                        }
+                                                    }
+                                                }
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            },
+            "min_score": 1
+        }
+    }
+}
+
+// Now wrap above in the must not and viola we can limit the number of matches
+// note that LOWER than the min_score will be allowed
+{
+    "query": {
+        "bool": {
+            "must_not": {
+                    "function_score": {
+                        "query": {
+                            "nested": {
+                                "path": "ingredient",
+                                "score_mode": "sum",
+                                "query": {
+                                    "constant_score": {
+                                        "boost": 1,
+                                        "filter": {
+                                            "bool": {
+                                                "must_not": {
+                                                    "nested": {
+                                                        "path": "ingredient.option",
+                                                        "query": {
+                                                            "bool": {
+                                                                "must_not": {
+                                                                    "nested": {
+                                                                        "path": "ingredient.option.allergen",
+                                                                        "query": {
+                                                                            "bool": {
+                                                                                "must_not": [
+                                                                                            {"match": {"ingredient.option.allergen.name": "Milk"}}
+                                                                                ]
+                                                                            }
+                                                                        }
+                                                                    }
+                                                                }
+                                                            }
+                                                        }
+                                                    }
+                                                }
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        },
+                        "min_score": 2
+                    }
+            }
+        }
+    }
+}
+
+// this is for allergens - note the must in the inner query is a must and not a must not
+// "Get recipes where all ingredients have at least one option that do not have at least one allergen listed as bad" (these are when the user selects items to be bad)
+// == "Get recipes where (NOT) that have one ingredient that does (NOT) have at least one option that has (NOT -- note this isn't a translated not from an "all" statement, but the original one from the original sentence) at least one allergen listed as bad.
+{
+    "query": {
+        "bool": {
+            "must_not": {
+                "nested": {
+                    "path": "ingredient",
+                    "query": {
+                        "bool": {
+                            "must_not": {
+                                "nested": {
+                                    "path": "ingredient.option",
+                                    "query": {
+                                        "bool": {
+                                            "must_not": {
+                                                "nested": {
+                                                    "path": "ingredient.option.allergen",
+                                                    "query": {
+                                                        "bool": {
+                                                            "should": [
+                                                                {"match": {"ingredient.option.allergen.name": "Cocoa"}},
+                                                                {"match": {"ingredient.option.allergen.name": "Coconut"}}
+                                                            ]
+                                                        }
+                                                    }
+                                                }
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
+
+// Original search with search term
+{
+    "query": {
+        "bool": {
+            "must": [
+                {
+                    "match": {
+                        "name": "Ice"
+                    }
+                },
+                {
+                    "bool": {
+                        "must_not": {
+                            "nested": {
+                                "path": "ingredient",
+                                "query": {
+                                    "bool": {
+                                        "must_not": {
+                                            "nested": {
+                                                "path": "ingredient.option",
+                                                "query": {
+                                                    "bool": {
+                                                        "must_not": {
+                                                            "nested": {
+                                                                "path": "ingredient.option.allergen",
+                                                                "query": {
+                                                                    "bool": {
+                                                                        "must_not": [
+                                                                                    {"match": {"ingredient.option.allergen.name": "Coconut"}},
+                                                                                    {"match": {"ingredient.option.allergen.name": "Cocoa"}}
+                                                                        ]
+                                                                    }
+                                                                }
+                                                            }
+                                                        }
+                                                    }
+                                                }
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            ]
+        }
+    }   
+}

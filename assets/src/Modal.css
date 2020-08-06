@@ -1,0 +1,29 @@
+.Mask {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    background-color: black;
+    opacity: 0.5;
+}
+
+.ModalContent {
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%,-50%);
+    background-color: white;
+    padding: 40px;
+    max-height: calc(80vh - 80px);
+    border-radius: 25px;
+    overflow: auto;
+    position: fixed;
+    width: calc(75% - 80px);
+}
+
+@media only screen and (max-width: 440px) {
+    .ModalContent {
+        width: calc(100% - 80px);
+    }
+}

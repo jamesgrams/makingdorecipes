@@ -1,0 +1,83 @@
+.SearchForm {
+    width: 100%;
+}
+
+.SearchForm > .SearchRow {
+    width: 100%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    flex-wrap: wrap;
+}
+
+.SearchForm .SearchColumn {
+    display: inline-block;
+}
+
+.SearchForm > .SearchRow > label > .react-autosuggest__container {
+    flex-grow: 1;
+}
+
+.SearchForm > .SearchRow > label > .react-autosuggest__container ul {
+    margin-left: 10px;
+    border-top: 0;
+    text-align: left;
+}
+
+.SearchForm .SeachFlexibilityLabel {
+    flex-grow: 0;
+}
+
+.SearchForm .SeachFlexibilityLabel > input {
+    max-width: 100px;
+}
+
+.SearchForm .SearchLabelRadio > span {
+    flex-grow: 1;
+}
+
+.SearchForm .SearchLabelRadio > input {
+    flex-grow: 0;
+}
+
+.SearchForm .SearchMoreWrapper {
+    flex-grow: 1;
+    text-align: left;
+    margin: 10px;
+}
+
+.SearchForm .SearchMore {
+    user-select: none;
+    cursor: pointer;
+    display: inline-block;
+}
+
+.SearchForm button {
+    margin: 10px;
+    cursor: pointer;
+}
+
+.SearchForm .react-tagsinput {
+    margin-left: 10px;
+    flex-grow: 1;
+}
+
+.SearchAddLink {
+    position: fixed;
+    bottom: 20px;
+    right: 20px;
+    text-decoration: none;
+    color: white;
+    background-color: #0075ff;
+    border-radius: 50%;
+    width: 50px;
+    height: 50px;
+    line-height: 50px;
+    font-size: 200%;
+}
+
+@media only screen and (max-width: 382px) {
+    .SearchForm .SearchLabelRadio {
+        display: inline-block;
+    }
+}

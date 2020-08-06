@@ -1,0 +1,69 @@
+.ResultListItemOption {
+    display: inline-block;
+}
+
+.ResultListItemAllergens {
+    font-size: 70%;
+    margin-left: 5px;
+    font-style: italic;
+}
+
+.ResultListItemTitle {
+    margin-top: 10px;
+    font-weight: bold;
+}
+
+.ResultListItemIngredients {
+    list-style-type: disc;
+}
+
+.ResultListItemName {
+    font-weight: bold;
+    font-size: 125%;
+}
+
+.ResultListItemTags {
+    margin-top: 5px;
+}
+
+.ResultListItemSteps {
+    max-height: 100px;
+}
+
+li.ResultListItem {
+    cursor: pointer;
+    border: 2px solid grey;
+    padding: 20px;
+    margin: 20px 0;
+    border-radius: 20px;
+}
+
+.ResultListItem .react-tagsinput-tag {
+    cursor: pointer;
+}
+
+.ResultListItemCredit {
+    margin-top: 20px;
+    font-size: 80%;
+    display: inline-block;
+}
+
+.ResultListItemCredit::before {
+    content: "Submitted by "
+}
+
+.ResultListItemButtons {
+    padding: 10px 0;
+}
+
+.ResultListItemButtons button {
+    cursor: pointer;
+}
+
+.ResultListItemButtons button:first-child {
+    margin-right: 10px;
+}
+
+.st-inline-share-buttons {
+    margin-top: 10px;
+}

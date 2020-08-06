@@ -1,0 +1,26 @@
+.DS_Store
+node_modules/*
+npm-debug.log
+.env
+
+# dependencies
+/assets/node_modules
+/assets/.pnp
+/assets/.pnp.js
+
+# testing
+/assets/coverage
+
+# production
+/assets/build
+
+# misc
+/assets/.DS_Store
+/assets/.env.local
+/assets/.env.development.local
+/assets/.env.test.local
+/assets/.env.production.local
+
+/assets/npm-debug.log*
+/assets/yarn-debug.log*
+/assets/yarn-error.log*

@@ -1,0 +1,17 @@
+.ResultList {
+    list-style-type: none;
+    padding: 0;
+    margin: 10px;
+    text-align: left;
+    border-top: 2px solid grey;
+    margin-bottom: 0;
+}
+
+.ResultList > a:last-child > .ResultListItem {
+    margin-bottom: 10px;
+}
+
+.ResultList > a {
+    color: black;
+    text-decoration: none;
+}

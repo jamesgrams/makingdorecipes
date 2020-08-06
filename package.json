@@ -1,0 +1,30 @@
+{
+  "name": "makingdo",
+  "author": "James Grams <james@game103.net> (https://game103.net)",
+  "version": "1.0.0",
+  "description": "Making Do Recipies Allergy Restrictions",
+  "main": "src/index.js",
+  "private": true,
+  "scripts": {
+    "start": "node src/index.js",
+    "postinstall": "cd assets && mkdir node_modules && npm install && npm build"
+  },
+  "dependencies": {
+    "express": "^4.17.1",
+    "elasticsearch": "^16.7.1",
+    "jsonwebtoken": "^8.5.1",
+    "axios": "^0.19.2",
+    "cookie-parser": "^1.4.5",
+    "pluralize": "^8.0.0",
+    "striptags": "^"
+  },
+  "engines": {
+    "node": ">= 10.10.0",
+    "npm": ">= 3.0.0"
+  },
+  "browserslist": [
+    "> 1%",
+    "last 2 versions",
+    "not ie <= 8"
+  ]
+}

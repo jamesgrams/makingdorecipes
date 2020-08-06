@@ -1,0 +1,143 @@
+* {
+    font-family: 'Merriweather', serif;
+}
+
+header {
+    padding-bottom: 20px;
+}
+
+header > img {
+    width: 100px;
+}
+
+.App {
+    text-align: center;
+    margin: 10px;
+    max-width: 1000px;
+    margin-left: auto;
+    margin-right: auto;
+    border: 2px solid grey;
+    padding: 20px;
+    border-radius: 50px;
+}
+
+.hidden {
+    display: none !important;
+}
+
+input {
+    border: 1px solid grey;
+    border-radius: 3px;
+}
+
+button,input[type="submit"] {
+    background-color: #0075ff;
+    color: white;
+    border: none;
+    padding: 10px 30px;
+    border-radius: 10px;
+}
+
+button[disabled],input[type="submit"][disabled] {
+    opacity: 0.5;
+    cursor: default;
+}
+
+.react-tagsinput {
+    background-color: #fff;
+    border: 1px solid grey;
+    border-radius: 3px;
+    overflow: hidden;
+    padding-top: 4px;
+    text-align: left;
+    padding-left: 10px;
+    padding-right: 10px;
+}
+  
+.react-tagsinput--focused {
+    border: 2px solid black;
+}
+  
+.react-tagsinput-tag {
+    background-color: #0075ff;
+    border-radius: 3px;
+    color: #fff;
+    display: inline-block;
+    font-size: 13px;
+    margin-bottom: 5px;
+    margin-right: 5px;
+    padding: 5px;
+}
+  
+.react-tagsinput-remove {
+    cursor: pointer;
+    font-weight: bold;
+}
+  
+.react-tagsinput-tag a::before {
+    content: " ×";
+}
+  
+.react-tagsinput-input:not([type="radio"]) {
+    margin-left: 0 !important;
+    padding: 5px !important;
+    background: transparent;
+    border: 0;
+    margin-bottom: 5px;
+    margin-top: 1px;
+    outline: none;
+    width: 100px;
+}
+
+.react-autosuggest__container {
+    display: inline-block;
+}
+
+.react-autosuggest__suggestions-container {
+    position: absolute;
+    background-color: white;
+}
+
+.react-autosuggest__suggestions-list {
+    border: 2px solid black;
+    margin: 0;
+    list-style-type: none;
+    padding: 0;
+    border-radius: 0 0 3px 3px;
+    z-index: 100;
+    position: relative;
+    background-color: white;
+}
+
+.react-autosuggest__suggestion {
+    padding: 5px 10px;
+    cursor: pointer;
+}
+
+.react-autosuggest__suggestion--highlighted {
+    background-color: rgb(173, 173, 173);
+}
+
+label {
+    margin: 10px;
+    display: flex;
+    align-items: baseline;
+    flex-grow: 1;
+    text-align: right;
+}
+
+input:not([type="radio"]):not([type="checkbox"]):not([type="submit"]) {
+    margin-left: 10px;
+    padding: 10px;
+    width: calc(100% - 10px);
+}
+
+input[type="checkbox"] {
+    margin-left: 10px;
+}
+
+input[type="radio"] {
+    margin-left: 10px;
+    padding: 10px;
+    flex-grow: 1;
+}
