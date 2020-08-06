@@ -6,9 +6,13 @@
  // TODO fix logo
  // TODO add form doesn't look great on iPhone
  // TODO easier login
- // TODO make sure www is working
  // TODO iphone work. no curved inputs and no zoom in (bigger font size)
  // TODO custom error
+ // TODO crawler for facebook not getting proper recipe description
+ // TODO instructions that allergens must become tags?
+ // TODO make substitutes less prominent
+ // TODO should more shown be in the url? no but we should include unapproved as once of the triggers.
+ // TODO contact us
 
 /******************************************* Constants *********************************************/
 
