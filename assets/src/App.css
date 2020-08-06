@@ -79,7 +79,7 @@ button[disabled],input[type="submit"][disabled] {
     content: " ×";
 }
   
-.react-tagsinput-input:not([type="radio"]) {
+input.react-tagsinput-input:not([type="radio"]):not([type="checkbox"]):not([type="submit"]) {
     margin-left: 0 !important;
     padding: 5px !important;
     background: transparent;
