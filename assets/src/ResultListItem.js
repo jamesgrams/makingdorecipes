@@ -77,8 +77,9 @@ class ResultListItem extends React.Component {
 
         let metaTitle = this.props.name + " - Making Do Recipes";
         let metaDescription = this.props.steps.replace(/<[^>]+>/g, '');
-        return <HtmlTag className="ResultListItem" key={this.props.name}>
-            <Helmet>
+        let helmet = "";
+        if( this.isModal ) {
+            helmet = <Helmet>
                 <title>{metaTitle}</title>
                 <meta
                     name="description"
@@ -92,6 +93,9 @@ class ResultListItem extends React.Component {
                 <meta property="twitter:title" content={metaTitle}/>
                 <meta propery="twitter:description" content={metaDescription}/>
             </Helmet>
+        }
+        return <HtmlTag className="ResultListItem" key={this.props.name}>
+            {helmet}
             <div className="ResultListItemName">{this.props.name}</div>
             <div className="ResultListItemTags">{this.props.tags}</div>
             <div className="ResultListItemTitle">Ingredients</div>
