@@ -18,7 +18,6 @@
     max-height: calc(75vh - 80px);
     border-radius: 25px;
     overflow: auto;
-    position: fixed;
     width: calc(75% - 80px);
 }
 

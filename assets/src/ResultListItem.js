@@ -65,8 +65,8 @@ class ResultListItem extends React.Component {
                     'facebook',
                     'twitter',
                     'pinterest',
-                    'messenger',
-                    'email'
+                    'email',
+                    'print'
                 ],
                 padding: 10,          // padding within buttons (INTEGER)
                 radius: 3,            // the corner radius on each button (INTEGER)
@@ -76,7 +76,7 @@ class ResultListItem extends React.Component {
         />
 
         let metaTitle = this.props.name + " - Making Do Recipes";
-        let metaDescription = this.props.steps.replace(/<[^>]+>/g, '');
+        let metaDescription = this.props.steps.replace(/<[^>]+>/g, '').replace(/\r?\n|\r/g," ").replace(/\s{2,}/," ").trim();
         let helmet = "";
         if( this.isModal ) {
             helmet = <Helmet>

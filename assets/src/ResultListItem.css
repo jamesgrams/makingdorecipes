@@ -69,3 +69,31 @@ li.ResultListItem {
 .st-inline-share-buttons {
     margin-top: 10px;
 }
+
+@media print {
+    div.Mask {
+        background-color: white;
+    }
+    div.ModalContent {
+        position: absolute !important;
+        background-color: white;
+        top: 0;
+        left: 0;
+        width: calc(100vw - 80px);
+        transform: none;
+        border-radius: 0;
+        max-height: none;
+    }
+    div.st-inline-share-buttons {
+        display: none !important;
+    }
+    .ResultListItemButtons  {
+        display: none;
+    }
+    a.SearchAddLink {
+        display: none;
+    }
+    div.Search {
+        display: none;
+    }
+}

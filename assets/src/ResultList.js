@@ -86,7 +86,7 @@ class ResultList extends React.Component {
                         <span className="ResultListItemOptionName">{option.quantity + " " + option.name}</span>
                         <span className={"ResultListItemAllergens " + (!option.allergen.length ? "hidden" : "")}>({allergens})</span>
                     </span>
-                } ).reduce((acc, x) => acc === null ? [x] : [acc, ' / ', x], null);;
+                } ).reduce((acc, x) => acc === null ? [x] : [acc, <b> / </b>, x], null);;
                 return <li key={index} className="ResultListItemIngredient">{options}</li>
             } );
             let credits;

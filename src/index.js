@@ -4,7 +4,9 @@
  */
 
  // TODO fix logo
- // TODO crawler for facebook not getting proper recipe description
+ // TODO test Facebook
+ // TODO would be nice if fuziness would apply to all on bool_prefix multi match but it doesn't
+ // TODO pictures
 
 /******************************************* Constants *********************************************/
 
@@ -15,10 +17,13 @@ const crypto = require("crypto");
 const cookieParser = require("cookie-parser");
 const pluralize = require("pluralize");
 const striptags = require("striptags");
+const fs = require("fs");
 
 const PORT=process.env.PORT || 80;
 const ELASTICSEARCH_INDEX = "recipe";
 const ELASTICSEARCH_FUZZINESS = "AUTO";
+const MAX_SUGGESTIONS = 7;
+const ELASTICSEARCH_INNER_HITS_COUNT = 100;
 const HTTP_OK = 200;
 const HTTP_SEMANTIC_ERROR = 422;
 const HTTP_UNAUTHORIZED = 401;
@@ -30,6 +35,14 @@ const TOKEN_COOKIE = "making-do-recipes-token";
 const TOKEN_OPTIONS = {"expiresIn": "2d"};
 const TOKEN_EXPIRES_IN_MS = 172800000;
 const BAD_REQUEST = "Bad Request";
+const REPLACE_TITLE_PLACEHOLDER = "REPLACE_TITLE_PLACEHOLDER";
+const REPLACE_DESCRIPTION_PLACEHOLDER = "REPLACE_DESCRIPRION_PLACEHOLDER";
+const OG_PLACEHOLDER = "OG_PLACEHOLDER";
+
+let indexFile = fs.readFileSync("assets/build/index.html").toString(); // keep this file in memory on startup
+indexFile = indexFile.replace(/(?<=<title>)[^<]+(?=<\/title>)/,REPLACE_TITLE_PLACEHOLDER);
+indexFile = indexFile.replace(/(?<=<meta name="description" content=")[^"]+/,REPLACE_DESCRIPTION_PLACEHOLDER);
+indexFile = indexFile.replace(/(?=<\/head>)+/,OG_PLACEHOLDER);
 
 /****************** Setup connection to Elasticsearch and start the Express app. ******************/
 
@@ -59,7 +72,29 @@ app.use( express.json() );
 app.use(cookieParser());
 app.use("/", express.static("assets/build"));
 app.use("/add", express.static("assets/build/index.html"));
-app.use("/recipe/*", express.static("assets/build/index.html"));
+
+// For the Facebook Crawler, we can't set og tags dynamically with React Helmet
+// So we need to inject them
+// Make sure this matches what's in ResultListItem.js Helmet just like index.html should match the main Search.js Helmet.
+app.use("/recipe/:id", async (req, res, next) => {
+    
+    let recipes = await getRecipes(req.query.id);
+    if( !recipes.length ) {
+        next();
+        return;
+    }
+    let recipe = recipes[0];
+    let title = recipe.name + " - Making Do Recipes";
+    let url = "https://makingdorecipes.com/recipe/" + recipe.id;
+    let description = recipe.steps.replace(/<[^>]+>/g, '').replace(/\r?\n|\r/g," ").replace(/\s{2,}/," ").trim();
+
+    let editedIndexFile = indexFile;
+    editedIndexFile = editedIndexFile.replace(REPLACE_TITLE_PLACEHOLDER, title);
+    editedIndexFile = editedIndexFile.replace(REPLACE_DESCRIPTION_PLACEHOLDER, description);
+    editedIndexFile = editedIndexFile.replace(OG_PLACEHOLDER, `<meta property="og:title" content="${title}" data-react-helmet="true"/><meta property="og:type" content="article" data-react-helmet="true"/><meta property="og:url" content="${url}" data-react-helmet="true"/><meta propery="og:description" content="${description}" data-react-helmet="true"/><meta property="twitter:card" content="summary" data-react-helmet="true"/><meta property="twitter:title" content="${title}" data-react-helmet="true"/><meta propery="twitter:description" content="${description}" data-react-helmet="true"/>`);
+
+    res.end(editedIndexFile);
+});
 
 /******************************************* Endpoints *********************************************/
 
@@ -279,7 +314,8 @@ async function getRecipes( id, search, tags, safes, allergens, flexibility=0, pr
                         "name",
                         "name._2gram",
                         "name._3gram"
-                    ]
+                    ],
+                    "fuzziness": ELASTICSEARCH_FUZZINESS
                 }
             });
         }
@@ -467,50 +503,40 @@ async function getOptionsPrefix( search ) {
     if( !errorCheckType(search, "string") ) return Promise.reject(BAD_REQUEST);
 
     let body = {
+        "_source": false,
         "query": {
             "bool": {
                 "filter": {
                     "term": {
                         "approved": true
                     }
-                }
-            }
-        },
-        "size": 0,
-        "aggs": {
-            "recipes": {
-                "nested": {
-                    "path": "ingredient"
                 },
-                "aggs": {
-                    "ingredients": {
+                "must": [
+                    {
                         "nested": {
-                            "path": "ingredient.option"
-                        },
-                        "aggs": {
-                            "options": {
-                                "filter": {
-                                    "multi_match": {
-                                        "query": search,
-                                        "type": "bool_prefix",
-                                        "fields": [
-                                                "ingredient.option.name",
-                                                "ingredient.option.name._2gram",
-                                                "ingredient.option.name._3gram"
-                                        ]
-                                    }
-                                },
-                                "aggs": {
-                                    "options_filtered": {
-                                        "terms": {
-                                            "field": "ingredient.option.name_suggestable"
+                            "inner_hits": {"size":ELASTICSEARCH_INNER_HITS_COUNT,"_source":false},
+                            "path": "ingredient",
+                            "query": {
+                                "nested": {
+                                    "inner_hits": {"size":ELASTICSEARCH_INNER_HITS_COUNT,"_source":"ingredient.option.name_suggestable"},
+                                    "path": "ingredient.option",
+                                    "query": {
+                                        "multi_match": {
+                                            "query": search,
+                                            "type": "bool_prefix",
+                                            "fuzziness": ELASTICSEARCH_FUZZINESS,
+                                            "fields": [
+                                                    "ingredient.option.name",
+                                                    "ingredient.option.name._2gram",
+                                                    "ingredient.option.name._3gram"
+                                            ]
                                         }
                                     }
                                 }
                             }
                         }
                     }
-                }
+                ]
             }
         }
     };
@@ -520,7 +546,28 @@ async function getOptionsPrefix( search ) {
         body: body
     });
 
-    return Promise.resolve(response.aggregations.recipes.ingredients.options.options_filtered.buckets.map(el => el.key));
+    // We have to aggregate at the application level, since in Elasticsearch, there is no way for us to 
+    // get the nested document score in the nested aggregation. A nested aggregation (terms bucket on name_suggestable) could get us the documents
+    // that match for each bucket, and ideally we would sort the buckets by their max score, but the score
+    // returned is the score for the root document which has already averaged out of all the scores of its nested documents (meaning all options for a recipe would have the same value). 
+    // The only way to get the nested score is through inner hits.
+    // This article explains sortiny by score - but that score is for the root, even though nested top_hits nicely returns the source of the nested match, it still gives the root doc score.
+        
+    let buckets = {}; // keys = name_suggestable, value = max_score
+    for( let recipeHit of response.hits.hits ) {
+        for( let ingredientHit of recipeHit.inner_hits.ingredient.hits.hits ) {
+            for( let optionHit of ingredientHit.inner_hits['ingredient.option'].hits.hits ) {
+                buckets[ optionHit._source.name_suggestable ] = Math.max( optionHit._score, buckets[ optionHit._source.name_suggestable ] || 0 );
+            }
+        }
+    }
+    let responseArray = Object.keys(buckets).sort((a,b) => {
+        //let maxAHit = a.top.hits.hits
+        if( buckets[a] > buckets[b] ) return -1;
+        if( buckets[b] > buckets[a] ) return 1;
+        return 0;
+    }).slice(0, MAX_SUGGESTIONS);
+    return Promise.resolve(responseArray);
 }
 
 /**
@@ -534,48 +581,37 @@ async function getAllergensPrefix( search ) {
     if( !errorCheckType(search, "string") ) return Promise.reject(BAD_REQUEST);
 
     let body = {
+        "_source": false,
         "query": {
             "bool": {
                 "filter": {
                     "term": {
                         "approved": true
                     }
-                }
-            }
-        },
-        "size": 0,
-        "aggs": {
-            "recipes": {
-                "nested": {
-                    "path": "ingredient"
                 },
-                "aggs": {
-                    "ingredients": {
+                "must": [
+                    {
                         "nested": {
-                            "path": "ingredient.option"
-                        },
-                        "aggs": {
-                            "options": {
+                            "inner_hits": {"size":ELASTICSEARCH_INNER_HITS_COUNT,"_source":false},
+                            "path": "ingredient",
+                            "query": {
                                 "nested": {
-                                    "path": "ingredient.option.allergen"
-                                },
-                                "aggs": {
-                                    "allergens": {
-                                        "filter": {
-                                            "multi_match": {
-                                                "query": search,
-                                                "type": "bool_prefix",
-                                                "fields": [
-                                                        "ingredient.option.allergen.name",
-                                                        "ingredient.option.allergen.name._2gram",
-                                                        "ingredient.option.allergen.name._3gram"
-                                                ]
-                                            }
-                                        },
-                                        "aggs": {
-                                            "allergens_filtered": {
-                                                "terms": {
-                                                    "field": "ingredient.option.allergen.name_suggestable"
+                                    "inner_hits": {"size":ELASTICSEARCH_INNER_HITS_COUNT,"_source":false},
+                                    "path": "ingredient.option",
+                                    "query": {
+                                        "nested": {
+                                            "inner_hits": {"size":ELASTICSEARCH_INNER_HITS_COUNT,"_source":"ingredient.option.allergen.name_suggestable"},
+                                            "path": "ingredient.option.allergen",
+                                            "query": {
+                                                "multi_match": {
+                                                    "query": search,
+                                                    "type": "bool_prefix",
+                                                    "fuzziness": ELASTICSEARCH_FUZZINESS,
+                                                    "fields": [
+                                                            "ingredient.option.allergen.name",
+                                                            "ingredient.option.allergen.name._2gram",
+                                                            "ingredient.option.allergen.name._3gram"
+                                                    ]
                                                 }
                                             }
                                         }
@@ -584,7 +620,7 @@ async function getAllergensPrefix( search ) {
                             }
                         }
                     }
-                }
+                ]
             }
         }
     };
@@ -594,7 +630,23 @@ async function getAllergensPrefix( search ) {
         body: body
     });
 
-    return Promise.resolve(response.aggregations.recipes.ingredients.options.allergens.allergens_filtered.buckets.map(el => el.key));
+    let buckets = {}; // keys = name_suggestable, value = max_score
+    for( let recipeHit of response.hits.hits ) {
+        for( let ingredientHit of recipeHit.inner_hits.ingredient.hits.hits ) {
+            for( let optionHit of ingredientHit.inner_hits['ingredient.option'].hits.hits ) {
+                for( let allergenHit of optionHit.inner_hits['ingredient.option.allergen'].hits.hits ) {
+                    buckets[ allergenHit._source.name_suggestable ] = Math.max( allergenHit._score, buckets[ allergenHit._source.name_suggestable ] || 0 );
+                }
+            }
+        }
+    }
+    let responseArray = Object.keys(buckets).sort((a,b) => {
+        //let maxAHit = a.top.hits.hits
+        if( buckets[a] > buckets[b] ) return -1;
+        if( buckets[b] > buckets[a] ) return 1;
+        return 0;
+    }).slice(0, MAX_SUGGESTIONS);
+    return Promise.resolve(responseArray);
 }
 
 /**
