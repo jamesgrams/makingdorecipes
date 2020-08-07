@@ -6,6 +6,7 @@ import {
     Link
 } from "react-router-dom";
 import Modal from "./Modal.js";
+import InfiniteScroll from "react-infinite-scroll-component";
 
 class ResultList extends React.Component {
 
@@ -16,11 +17,13 @@ class ResultList extends React.Component {
     constructor(props) {
         super(props);
         this.state = {
-            "results": []
+            "results": [],
+            "noMoreResults": false
         };
         this.setFormTags = props.setFormTags;
         this.fetchRecipes = props.fetchRecipes;
         this.setShouldSetUrl = props.setShouldSetUrl;
+        this.getStateFromParams = props.getStateFromParams;
 
         this.setRecipeModalContent = this.setRecipeModalContent.bind(this);
     }
@@ -109,7 +112,9 @@ class ResultList extends React.Component {
                     {content}
                 </span>
             }
-            return <Link to={"/recipe/"+el.id} key={el.id}><ResultListItem isModal={false} id={el.id} name={el.name} tags={tags} ingredients={ingredients} steps={el.steps} credits={credits}></ResultListItem></Link>
+            return <Link to={"/recipe/"+el.id} key={el.id}>
+                <ResultListItem isModal={false} id={el.id} name={el.name} tags={tags} ingredients={ingredients} steps={el.steps} credits={credits}></ResultListItem>
+            </Link>
         });
     }
 
@@ -119,7 +124,25 @@ class ResultList extends React.Component {
     render() {
         this.getResultItems();
         return <ul className="ResultList">
-            {this.resultItems}
+            <InfiniteScroll
+                dataLength={this.state.results.length}
+                next={() => {
+                    this.fetchRecipes(null,null,this.state.results.length).then( (json) => {
+                        if( json.recipes.length ) {
+                            let results = this.state.results;
+                            results = results.concat(json.recipes);
+                            this.setState({results:results});
+                        }
+                        else {
+                            this.setState({noMoreResults:true});
+                        }
+                    } );
+                }}
+                hasMore={!this.state.noMoreResults}
+                loader={<div className="ResultListScrollLoading">Loading...</div>}
+            >
+                {this.resultItems}
+            </InfiniteScroll>
             <Route path="/recipe/:id" render={({match}) => {
                 return this.setRecipeModalContent( match.params.id );
             }}/>

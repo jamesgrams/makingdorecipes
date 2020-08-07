@@ -4,8 +4,6 @@
  */
 
  // TODO fix logo
- // TODO test Facebook
- // TODO would be nice if fuziness would apply to all on bool_prefix multi match but it doesn't
  // TODO pictures
 
 /******************************************* Constants *********************************************/
@@ -22,6 +20,7 @@ const fs = require("fs");
 const PORT=process.env.PORT || 80;
 const ELASTICSEARCH_INDEX = "recipe";
 const ELASTICSEARCH_FUZZINESS = "AUTO";
+const RESULTS_SIZE = 10;
 const MAX_SUGGESTIONS = 7;
 const ELASTICSEARCH_INNER_HITS_COUNT = 100;
 const HTTP_OK = 200;
@@ -110,7 +109,7 @@ app.get("/recipe", async function(request, response) {
                 return;
             }
         }
-        let recipes = await getRecipes(request.query.id, request.query.search, request.query.tags ? request.query.tags.split(",") : null, request.query.safes ? request.query.safes.split(",") : null, request.query.allergens ? request.query.allergens.split(",") : null, request.query.flexibility ? parseInt(request.query.flexibility) : 0, request.query.prefix ? true : false, request.query.unapproved ? true : false, request.query.all ? true : false);
+        let recipes = await getRecipes(request.query.id, request.query.search, request.query.tags ? request.query.tags.split(",") : null, request.query.safes ? request.query.safes.split(",") : null, request.query.allergens ? request.query.allergens.split(",") : null, request.query.flexibility ? parseInt(request.query.flexibility) : 0, request.query.prefix ? true : false, request.query.unapproved ? true : false, request.query.all ? true : false, parseInt(request.query.from) );
         writeResponse(response, SUCCESS, {"recipes":recipes});
     }
     catch(err) {
@@ -267,9 +266,10 @@ function writeResponse( response, status, object, code, contentType ) {
  * @param {boolean} [prefix] - True if the search should be a prefix search.
  * @param {boolean} [unapproved] - True if unapproved recipes should be the in the result (restricted to admins).
  * @param {boolean} [all] - True if we should fetch all (restricted to admins and overrides unapproved value).
+ * @param {number} [from] - The starting position.
  * @returns {Promise<Array>} - A promise containing an array of all the response objects.
  */
-async function getRecipes( id, search, tags, safes, allergens, flexibility=0, prefix=false, unapproved=false, all=false ) {
+async function getRecipes( id, search, tags, safes, allergens, flexibility=0, prefix=false, unapproved=false, all=false, from=0 ) {
 
     // Error check
     if( id && !errorCheckType(id, "string") ) return Promise.reject(BAD_REQUEST);
@@ -283,6 +283,8 @@ async function getRecipes( id, search, tags, safes, allergens, flexibility=0, pr
     if( flexibility && !errorCheckType(flexibility, "number") ) return Promise.reject(BAD_REQUEST);
     if( prefix && !errorCheckType(prefix, "boolean") ) return Promise.reject(BAD_REQUEST);
     if( unapproved && !errorCheckType(unapproved, "boolean") ) return Promise.reject(BAD_REQUEST);
+    if( all && !errorCheckType(all, "boolean") ) return Promise.reject(BAD_REQUEST);
+    if( from && !errorCheckType(from, "number") ) return Promise.reject(BAD_REQUEST);
 
     // This array will contain all the parts of our search - search, tags, and allergens.
     let searchParts = [];
@@ -411,12 +413,17 @@ async function getRecipes( id, search, tags, safes, allergens, flexibility=0, pr
     }
     
     let body = {
+        "size": RESULTS_SIZE,
         "query": {
             "bool": {
                 "must": searchParts
             }
         }
     };
+
+    if( from ) {
+        body.from = from;
+    }
 
     let response = await client.search({
         index: ELASTICSEARCH_INDEX,
@@ -521,14 +528,28 @@ async function getOptionsPrefix( search ) {
                                     "inner_hits": {"size":ELASTICSEARCH_INNER_HITS_COUNT,"_source":"ingredient.option.name_suggestable"},
                                     "path": "ingredient.option",
                                     "query": {
-                                        "multi_match": {
-                                            "query": search,
-                                            "type": "bool_prefix",
-                                            "fuzziness": ELASTICSEARCH_FUZZINESS,
-                                            "fields": [
-                                                    "ingredient.option.name",
-                                                    "ingredient.option.name._2gram",
-                                                    "ingredient.option.name._3gram"
+                                        "bool": {
+                                            "should": [
+                                                {
+                                                    "multi_match": {
+                                                        "query": search,
+                                                        "type": "bool_prefix",
+                                                        "fuzziness": ELASTICSEARCH_FUZZINESS,
+                                                        "fields": [
+                                                                "ingredient.option.name",
+                                                                "ingredient.option.name._2gram",
+                                                                "ingredient.option.name._3gram"
+                                                        ]
+                                                    }
+                                                },
+                                                {
+                                                    "match": {
+                                                        "ingredient.option.name": {
+                                                            "query": search,
+                                                            "fuzziness": ELASTICSEARCH_FUZZINESS // The bool prefix query doesn't search for fuzinness on the last item in the list, but we can here
+                                                        }
+                                                    }
+                                                }
                                             ]
                                         }
                                     }
@@ -603,14 +624,28 @@ async function getAllergensPrefix( search ) {
                                             "inner_hits": {"size":ELASTICSEARCH_INNER_HITS_COUNT,"_source":"ingredient.option.allergen.name_suggestable"},
                                             "path": "ingredient.option.allergen",
                                             "query": {
-                                                "multi_match": {
-                                                    "query": search,
-                                                    "type": "bool_prefix",
-                                                    "fuzziness": ELASTICSEARCH_FUZZINESS,
-                                                    "fields": [
-                                                            "ingredient.option.allergen.name",
-                                                            "ingredient.option.allergen.name._2gram",
-                                                            "ingredient.option.allergen.name._3gram"
+                                                "bool": {
+                                                    "should": [
+                                                        {
+                                                            "multi_match": {
+                                                                "query": search,
+                                                                "type": "bool_prefix",
+                                                                "fuzziness": ELASTICSEARCH_FUZZINESS,
+                                                                "fields": [
+                                                                        "ingredient.option.allergen.name",
+                                                                        "ingredient.option.allergen.name._2gram",
+                                                                        "ingredient.option.allergen.name._3gram"
+                                                                ]
+                                                            }
+                                                        },
+                                                        {
+                                                            "match": {
+                                                                "ingredient.option.allergen.name": {
+                                                                    "query": search,
+                                                                    "fuzziness": ELASTICSEARCH_FUZZINESS // The bool prefix query doesn't search for fuzinness on the last item in the list, but we can here
+                                                                }
+                                                            }
+                                                        }
                                                     ]
                                                 }
                                             }

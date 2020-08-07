@@ -7,11 +7,16 @@
     margin-bottom: 0;
 }
 
-.ResultList > a:last-child > .ResultListItem {
+.ResultList > div > div > a:last-child > .ResultListItem {
     margin-bottom: 10px;
 }
 
-.ResultList > a {
+.ResultList > div > div > a {
     color: black;
     text-decoration: none;
+}
+
+.ResultListScrollLoading {
+    text-align: center;
+    color: grey
 }

@@ -67,6 +67,7 @@ class Search extends React.Component {
         this.setFormTags = this.setFormTags.bind(this);
         this.autocompleteTagInput = this.autocompleteTagInput.bind(this);
         this.setUrl = this.setUrl.bind(this);
+        this.getStateFromParams = this.getStateFromParams.bind(this);
     }
 
     /**
@@ -156,30 +157,39 @@ class Search extends React.Component {
      * Fetch recipes.
      * @param {boolean} [prefix] - True if this is a prefix search.
      * @param {string} [id] - The id of the recipe.
+     * @param {string} [from] - Where to start from
      * @returns {Promise<Object>} - A promise containing the fetched object.
      */
-    fetchRecipes( prefix, id ) {
+    fetchRecipes( prefix, id, from ) {
         let promise = new Promise( (resolve, reject) => {
+
+            // When we specficy from, we want to get more results based on the search
+            // the user has already made, regardless of how they have changed the top form
+            // This search is in the URL params conveniently
+            let state = !from ? this.state : this.getStateFromParams();
 
             let paramsObject = {};
             if( id ) paramsObject.id = id;
             else {
                 paramsObject = {
-                    search: this.state.search,
-                    tags: this.state.tags.join(","),
-                    flexibility: this.state.flexibility ? this.state.flexibility : "",
+                    search: state.search,
+                    tags: state.tags.join(","),
+                    flexibility: state.flexibility ? this.state.flexibility : "",
                 }
-                if( this.state.safesMode ) {
-                    paramsObject.safes = this.state.items.join(",");
+                if( state.safesMode ) {
+                    paramsObject.safes = state.items.join(",");
                 }
                 else {
-                    paramsObject.allergens = this.state.items.join(",");
+                    paramsObject.allergens = state.items.join(",");
                 }
-                if( this.state.unapproved ) {
+                if( state.unapproved ) {
                     paramsObject.unapproved = true;
                 }
                 if( prefix ) {
                     paramsObject.prefix = true;
+                }
+                if( from ) {
+                    paramsObject.from = from;
                 }
             }
             
@@ -211,7 +221,7 @@ class Search extends React.Component {
 
             this.fetchRecipes().then( (json) => {
                 this.setState({"gettingResults": false});
-                this.resultList.current.setState({results: json.recipes});
+                this.resultList.current.setState({results: json.recipes, noMoreResults: false});
                 if( json.recipes.length ) this.setState({resultsShown: true}, () => {if(!noUrl)this.setUrl()});
                 else this.setState({resultsError: "No recipes found.", resultsErrorShown: true}, () => {if(!noUrl)this.setUrl()});
             } ).catch(err => {
@@ -388,7 +398,7 @@ class Search extends React.Component {
                 </div>
             </form>
             <div className={"SearchResults " + (this.state.resultsShown ? "" : "hidden")}>
-                <ResultList ref={this.resultList} setFormTags={this.setFormTags} fetchRecipes={this.fetchRecipes} setShouldSetUrl={() => this.shouldSetUrl = true}></ResultList>
+                <ResultList ref={this.resultList} setFormTags={this.setFormTags} fetchRecipes={this.fetchRecipes} getStateFromParams={this.getStateFromParams} setShouldSetUrl={() => this.shouldSetUrl = true}></ResultList>
             </div>
             <div className={"SearchResultsError " + (this.state.resultsErrorShown ? "" : "hidden")}>
                 {this.state.resultsError}

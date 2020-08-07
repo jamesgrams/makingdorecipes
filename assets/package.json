@@ -16,7 +16,8 @@
     "@tinymce/tinymce-react": "^3.6.0",
     "sharethis-reactjs": "^1.6.0",
     "react-cookies": "^0.1.1",
-    "react-helmet": "^6.1.0"
+    "react-helmet": "^6.1.0",
+    "react-infinite-scroll-component": "^5.0.5"
   },
   "scripts": {
     "start": "react-scripts start",
