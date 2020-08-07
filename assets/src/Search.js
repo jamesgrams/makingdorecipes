@@ -52,7 +52,7 @@ class Search extends React.Component {
                 "resultsShown": thisRef.state.resultsShown
             }
             // we only need to reload if the search is different
-            if( JSON.stringify(currentStateToCompare) !== JSON.stringify(thisRef.getStateFromParams()) ) {
+            if( window.location.pathname === "/" && JSON.stringify(currentStateToCompare) !== JSON.stringify(thisRef.getStateFromParams()) ) {
                 thisRef.setState(thisRef.getStateFromParams(), thisRef.componentDidMount);
             }
         }
