@@ -16,7 +16,10 @@ An Elasticsearch and React App to find and share recipes for people with allergi
 * `TOKEN_KEY` - Key to create token cookie for login
 * `REACT_APP_TINY_KEY` - API key for Tiny Cloud
 * `NODE_ENV` - Set to to `development` to avoid the HTTPS redirect
-* `PORT` - Completely optional - sets the port of the Express server.
+* `PORT` - Completely optional - sets the port of the Express server
+* `AWS_ACCESS_KEY_ID` - Access key for image uploads to Amazon S3
+* `AWS_SECRET_ACCESS_KEY` - Secret access key for AWS
+* `AWS_S3_BUCKET` - The name of the AWS S3 bucket to put images in
 
 ## Admin Login
 Visit `/login.html` and login. A cookie will be set appropriately. You will then be allowed to search for unapproved recipes, edit recipes, delete recipes, and approve recipes. To approve a recipe, simply edit and submit it while logged in.

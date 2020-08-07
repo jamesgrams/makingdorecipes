@@ -6,6 +6,7 @@ import Autosuggest from 'react-autosuggest'
 import Helmet from 'react-helmet'
 
 const COULD_NOT_SUBMIT = "An error ocurred. Please try again later.";
+const COULD_NOT_UPLOAD = "Could not upload image. Please try again later.";
 
 class Submit extends React.Component {
 
@@ -397,12 +398,62 @@ class Submit extends React.Component {
             <Editor
                 value={this.state.steps}
                 onEditorChange={(content) => {this.setStateAndMaskAlert({steps:content})}}
-                plugins="lists"
+                plugins="lists image imagetools"
                 toolbar="undo redo | styleselect | bold italic | alignleft aligncenter alignright alignjustify | outdent indent | numlist bullist"
                 init={{
-                    valid_elements: "ul,ol,li,p,pre,blockquote,div,span,br,sub,em,strong,sup,code,h1,h2,h3,h4,h5,h6",
+                    valid_elements: "ul,ol,li,p,pre,blockquote,div,span,br,sub,em,strong,sup,code,h1,h2,h3,h4,h5,h6,img",
                     font_formats: "Merriweather=merriweather",
-                    content_style: "body {font-family:Merriweather;font-size:16px}"
+                    content_style: "body {font-family:Merriweather;font-size:16px}",
+                    images_upload_handler: function(blobInfo, success, failure, progress) {
+                        let xhr = new XMLHttpRequest();
+
+                        let blob = blobInfo.blob();
+                        //let name = blob.name;
+                        let type = blob.type;
+                        let extension = blobInfo.filename().replace(blobInfo.name(),"");
+                         
+                        xhr.open("GET", `/sign-s3?extension=${extension}`);
+                        xhr.onreadystatechange = () => {
+                            if( xhr.readyState === 4 ) {
+                                if( xhr.status === 200 ) {
+                                    let response = JSON.parse(xhr.responseText);
+                                    let formData = new FormData();
+                                    formData.append("Content-Type", type);
+                                    Object.entries(response.fields).forEach(([k, v]) => {
+                                        formData.append(k, v);
+                                    });
+                                    formData.append("file", blob);
+                                    
+                                    let xhr2 = new XMLHttpRequest();
+                                    xhr2.open("POST", response.url);
+                                    xhr2.onreadystatechange = () => {
+                                        if( xhr2.readyState === 4 ) {
+                                            if( xhr2.status === 204 ) {
+                                                success(response.url + "/" + response.fields.Key);
+                                            }
+                                            else {
+                                                failure(COULD_NOT_UPLOAD);
+                                            }
+                                        }
+                                    }
+                                    xhr2.onerror = function() {
+                                        failure(COULD_NOT_UPLOAD);
+                                    }
+                                    xhr2.upload.onprogress = function (e) {
+                                        progress(e.loaded / e.total * 100);
+                                    };
+                                    xhr2.send(formData);
+                                }
+                                else {
+                                    failure(COULD_NOT_UPLOAD);
+                                }
+                            }
+                        };
+                        xhr.onerror = function() {
+                            failure(COULD_NOT_UPLOAD);
+                        }
+                        xhr.send();
+                    }
                 }}
                 apiKey={process.env.REACT_APP_TINY_KEY}
             >

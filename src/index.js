@@ -4,7 +4,6 @@
  */
 
  // TODO fix logo
- // TODO pictures
  // TODO data backups
 
 /******************************************* Constants *********************************************/
@@ -17,6 +16,8 @@ const cookieParser = require("cookie-parser");
 const pluralize = require("pluralize");
 const striptags = require("striptags");
 const fs = require("fs");
+const aws = require('aws-sdk');
+const { v1: uuidv1 } = require('uuid');
 
 const PORT=process.env.PORT || 80;
 const ELASTICSEARCH_INDEX = "recipe";
@@ -38,13 +39,16 @@ const BAD_REQUEST = "Bad Request";
 const REPLACE_TITLE_PLACEHOLDER = "REPLACE_TITLE_PLACEHOLDER";
 const REPLACE_DESCRIPTION_PLACEHOLDER = "REPLACE_DESCRIPRION_PLACEHOLDER";
 const OG_PLACEHOLDER = "OG_PLACEHOLDER";
+const AWS_S3_BUCKET=process.env.AWS_S3_BUCKET;
+
+/****************** Setup connection to Elasticsearch and start the Express app. ******************/
 
 let indexFile = fs.readFileSync("assets/build/index.html").toString(); // keep this file in memory on startup
 indexFile = indexFile.replace(/(?<=<title>)[^<]+(?=<\/title>)/,REPLACE_TITLE_PLACEHOLDER);
 indexFile = indexFile.replace(/(?<=<meta name="description" content=")[^"]+/,REPLACE_DESCRIPTION_PLACEHOLDER);
 indexFile = indexFile.replace(/(?=<\/head>)+/,OG_PLACEHOLDER);
 
-/****************** Setup connection to Elasticsearch and start the Express app. ******************/
+aws.config.region = "us-east-1";
 
 const client = new elasticsearch.Client({
     host: process.env.ELASTICSEARCH_HOST,
@@ -227,6 +231,31 @@ app.delete("/recipe", async function(request, response) {
         writeResponse(response, FAILURE, null, HTTP_SEMANTIC_ERROR);
     }
 } );
+
+// Respond to upload requests for images
+app.get("/sign-s3", (req,res) => {
+    let s3 = new aws.S3();
+    let fileName = uuidv1() + req.query['extension'];
+    //let fileType = req.query['type'];
+    let s3Params = {
+        Bucket: AWS_S3_BUCKET,
+        Fields: {
+            Key: fileName,
+            acl: "public-read"
+        },
+        Expires: 60,
+        Conditions: [
+            {'acl': 'public-read'},
+			["content-length-range", 0, 3000000], // content length restrictions: 0-3MB
+            ["starts-with", "$Content-Type", "image/"] // content type restriction
+		]
+    };
+
+    let data = s3.createPresignedPost(s3Params);
+
+    res.json(data);
+    res.end();
+});
 
 //The 404 Route (ALWAYS Keep this as the last route)
 app.get('*', function(req, res){
@@ -835,7 +864,7 @@ async function indexRecipe( id, name, tag, steps, approved, ingredient, credit )
         if( credit.name ) credit.name = striptags(credit.name);
         if( credit.link ) credit.link = striptags(credit.link);
     }
-    steps = striptags( steps, ["ul","ol","li","p","pre","blockquote","div","span","br","sub","em","strong","sup","code","h1", "h2","h3","h4","h5","h6"] );
+    steps = striptags( steps, ["ul","ol","li","p","pre","blockquote","div","span","br","sub","em","strong","sup","code","h1", "h2","h3","h4","h5","h6","img"] );
     // We set all tags, options, and allergens to lowercase. We do not want duplicates that simply differ by case both for searching (which we could do in the mapping), but also when displayed to the user.
     // We do allow case sensitivity in recipe names however.
     // Additionally, we remove plurality as we likewise don't want plural and non-plural duplicates being suggested to users.
