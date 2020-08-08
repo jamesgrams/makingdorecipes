@@ -15,6 +15,7 @@ An Elasticsearch and React App to find and share recipes for people with allergi
 * `ADMIN_PASSWORD` - MD5 hex of the admin password
 * `TOKEN_KEY` - Key to create token cookie for login
 * `REACT_APP_TINY_KEY` - API key for Tiny Cloud
+* `REACT_APP_GA_TRACKER` - Google Analytics tracking code
 * `NODE_ENV` - Set to to `development` to avoid the HTTPS redirect
 * `PORT` - Completely optional - sets the port of the Express server
 * `AWS_ACCESS_KEY_ID` - Access key for image uploads to Amazon S3

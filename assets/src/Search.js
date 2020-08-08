@@ -6,7 +6,8 @@ import TagsInput from 'react-tagsinput';
 import Autosuggest from 'react-autosuggest'
 import {
     Link,
-    Route
+    Route,
+    withRouter
 } from "react-router-dom";
 import Modal from './Modal';
 import Submit from "./Submit";
@@ -124,7 +125,9 @@ class Search extends React.Component {
         }
         let params = new URLSearchParams(Object.entries(paramsObject));
         let newUrl = Object.keys(paramsObject).length ? "?" + params.toString() : "";
-        window.history[ replaceState ? "replaceState" : "pushState" ]( {}, "", newUrl );
+
+        // use react-router (history is defined because we wrap with withRouter)
+        this.props.history[replaceState ? "replace" : "push"](newUrl);
     }
 
     /**
@@ -320,7 +323,6 @@ class Search extends React.Component {
                                 onChange: this.handleChange
                             }}
                             onSuggestionSelected={(e, {suggestion}) => {
-                                console.log(suggestion);
                                 this.setState({"search":suggestion}, this.handleSubmit);
                             }}
                             >
@@ -420,4 +422,4 @@ class Search extends React.Component {
     }
 }
 
-export default Search;
+export default withRouter(Search);
