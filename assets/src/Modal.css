@@ -21,6 +21,13 @@
     width: calc(75% - 80px);
 }
 
+body.modal-open {
+    height: 100vh;
+    overflow-y: hidden;
+    position: fixed;
+    width: 100vw;
+}
+
 @media only screen and (max-width: 440px) {
     .ModalContent {
         width: calc(100% - 80px);

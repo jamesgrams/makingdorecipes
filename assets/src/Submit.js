@@ -394,7 +394,7 @@ class Submit extends React.Component {
                 }}>
                     Add Ingredient
             </button>
-            <div className="SubmitSectionTitle">Steps</div>
+            <div className="SubmitSectionTitle">Instructions</div>
             <Editor
                 value={this.state.steps}
                 onEditorChange={(content) => {this.setStateAndMaskAlert({steps:content})}}

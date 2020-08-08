@@ -75,6 +75,10 @@ li.ResultListItem {
     height: auto;
 }
 
+.ResultListItem b {
+    font-size: 125%;
+}
+
 @media print {
     div.Mask {
         background-color: white;
@@ -84,7 +88,7 @@ li.ResultListItem {
         background-color: white;
         top: 0;
         left: 0;
-        width: calc(100vw - 80px);
+        width: calc(100% - 80px);
         transform: none;
         border-radius: 0;
         max-height: none;

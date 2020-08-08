@@ -17,9 +17,22 @@ class Modal extends React.Component {
     }
 
     /**
+     * The modal is being removed.
+     */
+    componentWillUnmount() {
+        document.body.classList.remove("modal-open");
+        let scrollY = document.body.style.top;
+        document.body.style.position = '';
+        document.body.style.top = '';
+        window.scrollTo(0, parseInt(scrollY || '0') * -1);
+    }
+
+    /**
      * Render the element.
      */
     render() {
+        document.body.style.top = `-${window.scrollY}px`;
+        document.body.classList.add("modal-open");
         let mask = <Link to="/" onClick={this.props.onclick}>
             <div className="Mask"></div>
         </Link>
