@@ -399,11 +399,14 @@ class Submit extends React.Component {
                 value={this.state.steps}
                 onEditorChange={(content) => {this.setStateAndMaskAlert({steps:content})}}
                 plugins="lists image imagetools"
-                toolbar="undo redo | styleselect | bold italic | alignleft aligncenter alignright alignjustify | outdent indent | numlist bullist"
+                toolbar="undo redo | styleselect | bold italic | outdent indent | numlist bullist | image"
                 init={{
-                    valid_elements: "ul,ol,li,p,pre,blockquote,div,span,br,sub,em,strong,sup,code,h1,h2,h3,h4,h5,h6,img",
+                    valid_elements: "ul,ol,li,p,pre,blockquote,div,span,br,sub,em,strong,sup,code,h1,h2,h3,h4,h5,h6,img[*]",
                     font_formats: "Merriweather=merriweather",
                     content_style: "body {font-family:Merriweather;font-size:16px}",
+                    relative_urls : false,
+                    remove_script_host : false,
+                    convert_urls : true,
                     images_upload_handler: function(blobInfo, success, failure, progress) {
                         let xhr = new XMLHttpRequest();
 

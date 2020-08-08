@@ -166,7 +166,7 @@ class Search extends React.Component {
             // When we specficy from, we want to get more results based on the search
             // the user has already made, regardless of how they have changed the top form
             // This search is in the URL params conveniently
-            let state = !from ? this.state : this.getStateFromParams();
+            let state = (!from && from !== 0) ? this.state : this.getStateFromParams();
 
             let paramsObject = {};
             if( id ) paramsObject.id = id;
