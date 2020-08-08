@@ -20,6 +20,7 @@ const aws = require('aws-sdk');
 const { v1: uuidv1 } = require('uuid');
 const sanitizeHtml = require('sanitize-html');
 const { parse } = require('node-html-parser');
+const compression = require('compression')
 
 const PORT=process.env.PORT || 80;
 const ELASTICSEARCH_INDEX = "recipe";
@@ -57,6 +58,7 @@ const client = new elasticsearch.Client({
     apiVersion: '7.2'
 });
 const app = express();
+app.use(compression());
 // Redirect the app
 app.use((req,res,next) => {
     // HTTPs
