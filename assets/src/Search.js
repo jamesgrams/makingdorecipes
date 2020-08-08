@@ -221,7 +221,7 @@ class Search extends React.Component {
 
             this.fetchRecipes().then( (json) => {
                 this.setState({"gettingResults": false});
-                this.resultList.current.setState({results: json.recipes, noMoreResults: false});
+                this.resultList.current.setState({results: json.recipes, total: json.total, noMoreResults: false});
                 if( json.recipes.length ) this.setState({resultsShown: true}, () => {if(!noUrl)this.setUrl()});
                 else this.setState({resultsError: "No recipes found.", resultsErrorShown: true}, () => {if(!noUrl)this.setUrl()});
             } ).catch(err => {

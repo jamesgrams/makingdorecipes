@@ -70,6 +70,11 @@ li.ResultListItem {
     margin-top: 10px;
 }
 
+.ResultListItemSteps img {
+    max-width: 100%;
+    height: auto;
+}
+
 @media print {
     div.Mask {
         background-color: white;

@@ -18,7 +18,8 @@ class ResultList extends React.Component {
         super(props);
         this.state = {
             "results": [],
-            "noMoreResults": false
+            "noMoreResults": false,
+            "total": 0
         };
         this.setFormTags = props.setFormTags;
         this.fetchRecipes = props.fetchRecipes;
@@ -124,6 +125,9 @@ class ResultList extends React.Component {
     render() {
         this.getResultItems();
         return <ul className="ResultList">
+            <div className={"ResultListTotal " + (this.state.total ? "" : "hidden")}>
+                {this.state.total} Result{this.state.total !== 1 ? "s" : ""}
+            </div>
             <InfiniteScroll
                 dataLength={this.state.results.length}
                 next={() => {

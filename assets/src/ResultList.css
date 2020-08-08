@@ -20,3 +20,8 @@
     text-align: center;
     color: grey
 }
+
+.ResultListTotal {
+    color: grey;
+    text-align: right;
+}

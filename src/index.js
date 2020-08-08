@@ -18,6 +18,8 @@ const striptags = require("striptags");
 const fs = require("fs");
 const aws = require('aws-sdk');
 const { v1: uuidv1 } = require('uuid');
+const sanitizeHtml = require('sanitize-html');
+const { parse } = require('node-html-parser');
 
 const PORT=process.env.PORT || 80;
 const ELASTICSEARCH_INDEX = "recipe";
@@ -83,6 +85,7 @@ app.use("/add", express.static("assets/build/index.html"));
 app.use("/recipe/:id", async (req, res, next) => {
     
     let recipes = await getRecipes(req.query.id);
+    recipes = recipes.recipes;
     if( !recipes.length ) {
         next();
         return;
@@ -115,7 +118,7 @@ app.get("/recipe", async function(request, response) {
             }
         }
         let recipes = await getRecipes(request.query.id, request.query.search, request.query.tags ? request.query.tags.split(",") : null, request.query.safes ? request.query.safes.split(",") : null, request.query.allergens ? request.query.allergens.split(",") : null, request.query.flexibility ? parseInt(request.query.flexibility) : 0, request.query.prefix ? true : false, request.query.unapproved ? true : false, request.query.all ? true : false, parseInt(request.query.from) );
-        writeResponse(response, SUCCESS, {"recipes":recipes});
+        writeResponse(response, SUCCESS, recipes);
     }
     catch(err) {
         console.log(err);
@@ -465,8 +468,12 @@ async function getRecipes( id, search, tags, safes, allergens, flexibility=0, pr
     if( response.hits.hits.length ) {
         responseVal = response.hits.hits.map( el => { return{...el._source, "id":el._id} } );
     }
+    let total = response.hits.total.value;
 
-    return Promise.resolve(responseVal);
+    return Promise.resolve({
+        total: total,
+        recipes: responseVal
+    });
 }
 
 /**
@@ -783,6 +790,7 @@ async function generateSlug( name ) {
             slug = slugBase + "-" + count;
         }
         let recipes = await getRecipes( slug );
+        recipes = recipes.recipes; // ignore hits
         if( recipes.length ) {
             count++;
         }
@@ -864,7 +872,23 @@ async function indexRecipe( id, name, tag, steps, approved, ingredient, credit )
         if( credit.name ) credit.name = striptags(credit.name);
         if( credit.link ) credit.link = striptags(credit.link);
     }
-    steps = striptags( steps, ["ul","ol","li","p","pre","blockquote","div","span","br","sub","em","strong","sup","code","h1", "h2","h3","h4","h5","h6","img"] );
+
+    steps = sanitizeHtml(steps, {
+        allowedTags: ["ul","ol","li","p","pre","blockquote","div","span","br","sub","em","strong","sup","code","h1", "h2","h3","h4","h5","h6","img"],
+        allowedAttributes: {
+            img: ['src','width','height']
+        }
+    });
+    let testSteps = parse( `<div>${steps}</div>` );
+    let images = testSteps.querySelectorAll("img");
+    let s3Regex = new RegExp("^https://s3\\.amazonaws\\.com/"+AWS_S3_BUCKET+"/.*\\.(png|jpg|jpeg|gif)","ig");
+    let s3Regex2 = new RegExp("^https://"+AWS_S3_BUCKET+"\\.s3\\.amazonaws\\.com/.*\\.(png|jpg|jpeg|gif)","ig");
+    for( let image of images ) {
+        if( !image.getAttribute("src").match(s3Regex) && !image.getAttribute("src").match(s3Regex2) ) {
+            return Promise.reject(BAD_REQUEST);
+        }
+    }
+
     // We set all tags, options, and allergens to lowercase. We do not want duplicates that simply differ by case both for searching (which we could do in the mapping), but also when displayed to the user.
     // We do allow case sensitivity in recipe names however.
     // Additionally, we remove plurality as we likewise don't want plural and non-plural duplicates being suggested to users.
