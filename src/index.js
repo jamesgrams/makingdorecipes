@@ -86,7 +86,7 @@ app.use("/add", express.static("assets/build/index.html"));
 // Make sure this matches what's in ResultListItem.js Helmet just like index.html should match the main Search.js Helmet.
 app.use("/recipe/:id", async (req, res, next) => {
     
-    let recipes = await getRecipes(req.query.id);
+    let recipes = await getRecipes(req.params.id);
     recipes = recipes.recipes;
     if( !recipes.length ) {
         next();
@@ -911,13 +911,13 @@ async function indexRecipe( id, name, tag, steps, approved, ingredient, credit )
     }
 
     id = striptags(id);
-    name = striptags(name);
+    name = striptags(name).trim();
     if( !id ) {
         id = await generateSlug(name);
     }
     if( credit ) {
-        if( credit.name ) credit.name = striptags(credit.name);
-        if( credit.link ) credit.link = striptags(credit.link);
+        if( credit.name ) credit.name = striptags(credit.name).trim();
+        if( credit.link ) credit.link = striptags(credit.link).trim();
     }
 
     steps = sanitizeHtml(steps, {
@@ -941,16 +941,16 @@ async function indexRecipe( id, name, tag, steps, approved, ingredient, credit )
     // Additionally, we remove plurality as we likewise don't want plural and non-plural duplicates being suggested to users.
     // We could use the analyze API with elasticseach, but doing it locally prevents the external request.
     for( let t of tag ) {
-        t.name = striptags(pluralize.singular(t.name.toLowerCase())); // tags, we actually do want singular and lower for display not just when suggestable
+        t.name = striptags(pluralize.singular(t.name.toLowerCase())).trim(); // tags, we actually do want singular and lower for display not just when suggestable
     }
     for( let i of ingredient ) {
         for( let o of i.option ) {
-            o.name = striptags(o.name);
-            o.quantity = striptags(o.quantity);
-            o.name_suggestable = pluralize.singular(o.name.toLowerCase());
+            o.name = striptags(o.name).trim();
+            o.quantity = striptags(o.quantity).trim();
+            o.name_suggestable = pluralize.singular(o.name.toLowerCase()).trim();
             for( let a of o.allergen ) {
-                a.name = striptags(a.name);
-                a.name_suggestable = pluralize.singular(a.name.toLowerCase());
+                a.name = striptags(a.name).trim();
+                a.name_suggestable = pluralize.singular(a.name.toLowerCase()).trim();
             }
         }
     }

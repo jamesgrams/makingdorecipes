@@ -70,6 +70,10 @@ li.ResultListItem {
     margin-top: 10px;
 }
 
+.ResultListItemSteps {
+    word-wrap: break-word;
+}
+
 .ResultListItemSteps img {
     max-width: 100%;
     height: auto;
@@ -88,7 +92,7 @@ li.ResultListItem {
         background-color: white;
         top: 0;
         left: 0;
-        width: calc(100% - 80px);
+        width: 100% !important;
         transform: none;
         border-radius: 0;
         max-height: none;

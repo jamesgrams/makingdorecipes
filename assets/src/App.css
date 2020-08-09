@@ -26,6 +26,10 @@ header > img {
     display: none !important;
 }
 
+.faded {
+    opacity: 0.5;
+}
+
 input {
     border: 1px solid grey;
     border-radius: 3px;

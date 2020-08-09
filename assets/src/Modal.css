@@ -34,6 +34,7 @@ body.modal-open {
 
 @media only screen and (max-width: 440px) {
     .ModalContent {
-        width: 100%;
+        width: 100% !important;
+        max-width: 100%;
     }
 }

@@ -34,7 +34,7 @@ class ResultListItem extends React.Component {
                 "method": "DELETE"
             }).then(
                 response => response.json().then( data => {
-                    if( data.status === "success" ) window.location.reload();
+                    if( data.status === "success" ) alert("Deleted recipe.");
                     else alert("Could not delete recipe.");
                 })
                 .catch(err => {

@@ -19,12 +19,14 @@ class ResultList extends React.Component {
         this.state = {
             "results": [],
             "noMoreResults": false,
-            "total": 0
+            "total": 0,
+            "pseudoDataLength": 0
         };
         this.setFormTags = props.setFormTags;
         this.fetchRecipes = props.fetchRecipes;
         this.setShouldSetUrl = props.setShouldSetUrl;
         this.getStateFromParams = props.getStateFromParams;
+        this.getParentResultsFaded = props.getParentResultsFaded;
 
         this.setRecipeModalContent = this.setRecipeModalContent.bind(this);
     }
@@ -113,7 +115,12 @@ class ResultList extends React.Component {
                     {content}
                 </span>
             }
-            return <Link to={"/recipe/"+el.id} key={el.id}>
+            return <Link to={"/recipe/"+el.id} key={el.id} onClick={(e) => {
+                if(this.getParentResultsFaded()) {
+                    e.stopPropagation();
+                    e.preventDefault();
+                }
+            }}>
                 <ResultListItem isModal={false} id={el.id} name={el.name} tags={tags} ingredients={ingredients} steps={el.steps} credits={credits}></ResultListItem>
             </Link>
         });
@@ -129,16 +136,16 @@ class ResultList extends React.Component {
                 {this.state.total} Result{this.state.total !== 1 ? "s" : ""}
             </div>
             <InfiniteScroll
-                dataLength={this.state.results.length}
+                dataLength={this.state.pseudoDataLength}
                 next={() => {
                     this.fetchRecipes(null,null,this.state.results.length).then( (json) => {
                         if( json.recipes.length ) {
                             let results = this.state.results;
                             results = results.concat(json.recipes);
-                            this.setState({results:results});
+                            this.setState({results:results,pseudoDataLength:results.length});
                         }
                         else {
-                            this.setState({noMoreResults:true});
+                            this.setState({noMoreResults:true,pseudoDataLength:this.state.results.length+1});
                         }
                     } );
                 }}

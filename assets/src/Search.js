@@ -32,6 +32,7 @@ class Search extends React.Component {
         this.state = {
             "resultsErrorShown": false,
             "resultsError": "",
+            "resultsFaded": false,
             "gettingResults": false,
             "itemsSuggestions": [],
             "tagsSuggestions": [],
@@ -220,16 +221,18 @@ class Search extends React.Component {
     handleSubmit(event, noUrl) {
         if(event) event.preventDefault();
         if( this.state.gettingResults ) return;
-        this.setState({"gettingResults": true, "resultsErrorShown": false, "resultsShown": false}, () => {
+        // keep the height while 
+        // fade the results if they are shown
+        this.setState({"gettingResults": true, "resultsErrorShown": false, "resultsShown": false, "resultsFaded": this.state.resultsShown}, () => {
 
             this.fetchRecipes().then( (json) => {
-                this.setState({"gettingResults": false});
-                this.resultList.current.setState({results: json.recipes, total: json.total, noMoreResults: false});
+                this.setState({"gettingResults": false,"resultsFaded":false});
+                this.resultList.current.setState({results: json.recipes, total: json.total, noMoreResults: false, pseudoDataLength: 0});
                 if( json.recipes.length ) this.setState({resultsShown: true}, () => {if(!noUrl)this.setUrl()});
-                else this.setState({resultsError: "No recipes found.", resultsErrorShown: true}, () => {if(!noUrl)this.setUrl()});
+                else this.setState({resultsError: "No recipes found.", resultsErrorShown: true, "resultsShown": false}, () => {if(!noUrl)this.setUrl()});
             } ).catch(err => {
-                this.setState({"gettingResults": false});
-                this.setState({resultsError: "Could not fetch recipes, please try again later.", resultsErrorShown: true})
+                this.setState({"gettingResults": false,"resultsFaded":false});
+                this.setState({resultsError: "Could not fetch recipes, please try again later.", resultsErrorShown: true, "resultsShown": false})
             });
 
         });
@@ -399,8 +402,8 @@ class Search extends React.Component {
                     <button onClick={this.handleSubmit} disabled={this.state.gettingResults ? "disabled" : ""}>Search</button>
                 </div>
             </form>
-            <div className={"SearchResults " + (this.state.resultsShown ? "" : "hidden")}>
-                <ResultList ref={this.resultList} setFormTags={this.setFormTags} fetchRecipes={this.fetchRecipes} getStateFromParams={this.getStateFromParams} setShouldSetUrl={() => this.shouldSetUrl = true}></ResultList>
+            <div className={"SearchResults " + (this.state.resultsFaded ? "faded" : (this.state.resultsShown ? "" : "hidden"))}>
+                <ResultList ref={this.resultList} setFormTags={this.setFormTags} fetchRecipes={this.fetchRecipes} getStateFromParams={this.getStateFromParams} setShouldSetUrl={() => this.shouldSetUrl = true} getParentResultsFaded={() => this.state.resultsFaded}></ResultList>
             </div>
             <div className={"SearchResultsError " + (this.state.resultsErrorShown ? "" : "hidden")}>
                 {this.state.resultsError}
