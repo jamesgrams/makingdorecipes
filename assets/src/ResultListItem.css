@@ -84,6 +84,11 @@ li.ResultListItem {
 }
 
 @media print {
+    body.modal-open {
+        position: static !important;
+        height: 0 !important;
+        overflow: hidden !important;
+    }
     div.Mask {
         background-color: white;
     }

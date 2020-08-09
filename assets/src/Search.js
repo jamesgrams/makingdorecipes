@@ -283,7 +283,6 @@ class Search extends React.Component {
     render() {
         let metaTitle = "Making Do Recipes"; // These should match what we set initially in index.html
         let metaDescription = "Find delicious recipes to make that are compatible with your or your child's allergies.";
-        let metaImg = "https://makingdorecipes.com/logo.png"; 
 
         return <div className="Search">
             <Helmet>
@@ -296,11 +295,8 @@ class Search extends React.Component {
                 <meta property="og:type" content="website"/>
                 <meta property="og:url" content="https://makingdorecipes.com"/>
                 <meta propery="og:description" content={metaDescription}/>
-                <meta property="og:image" content={metaImg}/>
-                <meta property="twitter:card" content="summary"/>
                 <meta property="twitter:title" content={metaTitle}/>
                 <meta propery="twitter:description" content={metaDescription}/>
-                <meta property="twitter:image:src" content={metaImg}/>
             </Helmet>
             <form className="SearchForm">
                 <div className="SearchRow">

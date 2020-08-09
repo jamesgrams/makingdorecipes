@@ -22,7 +22,6 @@ class Modal extends React.Component {
     componentWillUnmount() {
         document.body.classList.remove("modal-open");
         let scrollY = document.body.style.top;
-        document.body.style.position = '';
         document.body.style.top = '';
         window.scrollTo(0, parseInt(scrollY || '0') * -1);
     }

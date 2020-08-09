@@ -89,7 +89,6 @@ class ResultListItem extends React.Component {
                 <meta property="og:type" content="article"/>
                 <meta property="og:url" content={"https://makingdorecipes.com/recipe/" + this.props.id}/>
                 <meta propery="og:description" content={metaDescription}/>
-                <meta property="twitter:card" content="summary"/>
                 <meta property="twitter:title" content={metaTitle}/>
                 <meta propery="twitter:description" content={metaDescription}/>
             </Helmet>

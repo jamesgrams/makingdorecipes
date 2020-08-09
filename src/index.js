@@ -100,7 +100,7 @@ app.use("/recipe/:id", async (req, res, next) => {
     let editedIndexFile = indexFile;
     editedIndexFile = editedIndexFile.replace(REPLACE_TITLE_PLACEHOLDER, title);
     editedIndexFile = editedIndexFile.replace(REPLACE_DESCRIPTION_PLACEHOLDER, description);
-    editedIndexFile = editedIndexFile.replace(OG_PLACEHOLDER, `<meta property="og:title" content="${title}" data-react-helmet="true"/><meta property="og:type" content="article" data-react-helmet="true"/><meta property="og:url" content="${url}" data-react-helmet="true"/><meta propery="og:description" content="${description}" data-react-helmet="true"/><meta property="twitter:card" content="summary" data-react-helmet="true"/><meta property="twitter:title" content="${title}" data-react-helmet="true"/><meta propery="twitter:description" content="${description}" data-react-helmet="true"/>`);
+    editedIndexFile = editedIndexFile.replace(OG_PLACEHOLDER, `<meta property="og:title" content="${title}" data-react-helmet="true"/><meta property="og:type" content="article" data-react-helmet="true"/><meta property="og:url" content="${url}" data-react-helmet="true"/><meta propery="og:description" content="${description}" data-react-helmet="true"/><meta property="twitter:title" content="${title}" data-react-helmet="true"/><meta propery="twitter:description" content="${description}" data-react-helmet="true"/>`);
 
     res.end(editedIndexFile);
 });
