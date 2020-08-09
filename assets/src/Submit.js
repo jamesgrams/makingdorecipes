@@ -90,6 +90,18 @@ class Submit extends React.Component {
     }
 
     /**
+     * The modal is being removed.
+     */
+    componentWillUnmount() {
+        try {
+            window.tinymce.remove();
+        }
+        catch(err) {
+            console.log(err);
+        }
+    }
+
+    /**
      * Set whether mask should allow to exit without warning or not.
      * We exit without warning if the state is unchanged or we have submitted already.
      */
