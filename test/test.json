@@ -455,3 +455,59 @@
         }
     }   
 }
+
+
+// under file we have ingredients that have at least one good option for the current ingredient
+// This is what we need to do to get flexibility right
+// From the inner - find allergens that are chia seeds. We want all options that don't have this match. (these are the good options - no allergens)
+// Negate these - the bad options. For each bad option, we add +1 to the ingredient score. The lower the score, the less bad options.
+// So we set min_score to be the maximum amount of bad options that we want - anything with more bad options that this will be included in the next result.
+// But then, we negate that result to get the final result.
+{
+    "query": {
+        "bool": {
+            "must_not": {
+                "function_score": {
+                    "query": {
+                        "nested": {
+                            "path": "ingredient",
+                            "score_mode": "sum",
+                            "inner_hits": {},
+                            "query": {
+                                "constant_score": {
+                                    "filter": {
+                                        "bool": {
+                                            "must_not": {
+                                                "nested": {
+                                                    "path": "ingredient.option",
+                                                    "query": {
+                                                        "bool": {
+                                                            "must_not": {
+                                                                "nested": {
+                                                                    "path": "ingredient.option.allergen",
+                                                                    "query": {
+                                                                        "bool": {
+                                                                            "should": [
+                                                                                {"match": {"ingredient.option.allergen.name_suggestable": "chia seed"}}
+                                                                            ]
+                                                                        }
+                                                                    }
+                                                                }
+                                                            }
+                                                        }
+                                                    }                 
+                                                }
+                                            }
+                                        }
+                                    },
+                                    "boost": 1
+                                }
+                            }
+                        }
+                    },
+                    "min_score": 2
+                }
+            }
+        }
+    }
+}

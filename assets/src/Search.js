@@ -177,7 +177,7 @@ class Search extends React.Component {
                 paramsObject = {
                     search: state.search,
                     tags: state.tags.join(","),
-                    flexibility: state.flexibility ? this.state.flexibility : "",
+                    flexibility: state.flexibility ? state.flexibility : "",
                 }
                 if( state.safesMode ) {
                     paramsObject.safes = state.items.join(",");

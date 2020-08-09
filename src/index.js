@@ -375,7 +375,7 @@ async function getRecipes( id, search, tags, safes, allergens, flexibility=0, pr
                     "nested": {
                         "path": "tag",
                         "query": {
-                            "match": {"tag.name": tag} }
+                            "match_phrase": {"tag.name": tag} }
                         }
                     }
                 })
@@ -384,47 +384,46 @@ async function getRecipes( id, search, tags, safes, allergens, flexibility=0, pr
     }
     // safes and allergens
     if( safes || allergens ) {
-        let mustSection = {};
         let mustArray = [];
         let iterateArray;
-        if( safes ) {
-            mustSection["must_not"] = mustArray;
-            iterateArray = safes;
-        }
-        else {
-            mustSection["should"] = mustArray;
-            iterateArray = allergens;
-        }
+        if( safes ) iterateArray = safes;
+        else iterateArray = allergens;
         for( let item of iterateArray ) {
             mustArray.push({
-                "match": {"ingredient.option.allergen.name": item}
+                "match_phrase": {"ingredient.option.allergen.name": item}
             });
         }
 
         // See test.json for an explanation of what is going on here.
-        let allergensSection = {
-            "bool": {
-                "must_not": {
-                    "function_score": {
-                        "query": {
-                            "nested": {
-                                "path": "ingredient",
-                                "score_mode": "sum",
-                                "query": {
-                                    "constant_score": {
-                                        "boost": 1,
-                                        "filter": {
-                                            "bool": {
-                                                "must_not": {
-                                                    "nested": {
-                                                        "path": "ingredient.option",
-                                                        "query": {
-                                                            "bool": {
-                                                                "must_not": {
-                                                                    "nested": {
-                                                                        "path": "ingredient.option.allergen",
-                                                                        "query": {
-                                                                            "bool": mustSection
+        let allergensSection;
+        
+        if( safes ) {
+            allergensSection = {
+                "bool": {
+                    "must_not": {
+                        "function_score": {
+                            "query": {
+                                "nested": {
+                                    "path": "ingredient",
+                                    "score_mode": "sum",
+                                    "query": {
+                                        "constant_score": {
+                                            "boost": 1,
+                                            "filter": {
+                                                "bool": {
+                                                    "must_not": {
+                                                        "nested": {
+                                                            "path": "ingredient.option",
+                                                            "query": {
+                                                                "bool": {
+                                                                    "must_not": {
+                                                                        "nested": {
+                                                                            "path": "ingredient.option.allergen",
+                                                                            "query": {
+                                                                                "bool": {
+                                                                                    "must_not": mustArray
+                                                                                }
+                                                                            }
                                                                         }
                                                                     }
                                                                 }
@@ -436,13 +435,59 @@ async function getRecipes( id, search, tags, safes, allergens, flexibility=0, pr
                                         }
                                     }
                                 }
-                            }
-                        },
-                        "min_score": flexibility+1
+                            },
+                            "min_score": flexibility+1
+                        }
                     }
                 }
-            }
-        };
+            };
+        }
+        else {
+            console.log(flexibility+1);
+            allergensSection = {
+                "bool": {
+                    "must_not": {
+                        "function_score": {
+                            "query": {
+                                "nested": {
+                                    "path": "ingredient",
+                                    "score_mode": "sum",
+                                    "query": {
+                                        "constant_score": {
+                                            "filter": {
+                                                "bool": {
+                                                    "must_not": {
+                                                        "nested": {
+                                                            "path": "ingredient.option",
+                                                            "query": {
+                                                                "bool": {
+                                                                    "must_not": {
+                                                                        "nested": {
+                                                                            "path": "ingredient.option.allergen",
+                                                                            "query": {
+                                                                                "bool": {
+                                                                                    "should": mustArray
+                                                                                }
+                                                                            }
+                                                                        }
+                                                                    }
+                                                                }
+                                                            }                 
+                                                        }
+                                                    }
+                                                }
+                                            },
+                                            "boost": 1
+                                        }
+                                    }
+                                }
+                            },
+                            "min_score": flexibility+1
+                        }
+                    }
+                }
+            };
+        }
 
         searchParts.push(allergensSection);
     }
