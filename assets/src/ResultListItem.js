@@ -71,7 +71,8 @@ class ResultListItem extends React.Component {
                 padding: 10,          // padding within buttons (INTEGER)
                 radius: 3,            // the corner radius on each button (INTEGER)
                 show_total: false,
-                size: 40             // the size of each button (INTEGER)        
+                size: 40,             // the size of each button (INTEGER)
+                url: window.location.href
             }}
         />
 
