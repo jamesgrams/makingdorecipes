@@ -498,7 +498,11 @@ async function getRecipes( id, search, tags, safes, allergens, flexibility=0, pr
             "bool": {
                 "must": searchParts
             }
-        }
+        },
+        "sort": [
+            "_score",
+            {"_id":"asc"}
+        ]
     };
 
     if( from ) {
