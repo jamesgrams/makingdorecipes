@@ -1,7 +1,7 @@
 import React from 'react';
 import './App.css';
 import Search from './Search.js';
-import { BrowserRouter as Router } from 'react-router-dom';
+import { BrowserRouter as Router, Link } from 'react-router-dom';
 import Analytics from "./Analytics";
 
 class App extends React.Component {
@@ -17,7 +17,7 @@ class App extends React.Component {
                 </main>
             </div>
             <footer>
-                &copy; {new Date().getFullYear()} Making Do Recipes * <a href='mailto:admin@makingdorecipes.com'>Contact Us</a>
+                &copy; {new Date().getFullYear()} Making Do Recipes * <a href='mailto:admin@makingdorecipes.com'>Contact Us</a> * <Link to="/disclaimer">Disclaimer</Link>
             </footer>
         </Router>
     }

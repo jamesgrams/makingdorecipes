@@ -13,6 +13,7 @@ import Modal from './Modal';
 import Submit from "./Submit";
 import cookie from 'react-cookies';
 import Helmet from 'react-helmet';
+import Disclaimer from './Disclaimer.js';
 
 const SAFES_TITLE = "Match recipes containing only the listed items";
 const ALLERGENS_TITLE = "Match recipes that don't contain the listed items";
@@ -424,6 +425,7 @@ class Search extends React.Component {
                     e.stopPropagation();
                 }
             }}></Modal>}/>
+            <Route path="/disclaimer" render={() => <Modal content={<Disclaimer></Disclaimer>}></Modal>}></Route>
         </div>
     }
 }
