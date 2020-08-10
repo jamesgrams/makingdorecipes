@@ -17,7 +17,7 @@ class App extends React.Component {
                 </main>
             </div>
             <footer>
-                &copy; {new Date().getFullYear()} Making Do Recipes * <a href='mailto:admin@makingdorecipes.com'>Contact Us</a> * <Link to="/about">About</Link> * <Link to="/instructions">Instructions</Link> * <Link to="/tips">Tips</Link> * <Link to="/disclaimer">Disclaimer</Link>
+                &copy; {new Date().getFullYear()} Making Do Recipes * <a href='mailto:admin@makingdorecipes.com'>Contact Us</a> * <Link to="/about">About</Link> * <Link to="/instructions">Instructions</Link> * <Link to="/disclaimer">Disclaimer</Link>
             </footer>
         </Router>
     }

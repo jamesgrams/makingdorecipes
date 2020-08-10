@@ -68,7 +68,7 @@ class ResultList extends React.Component {
         }
 
         listItem = listItem.props.children;
-        let popout = <ResultListItem isModal={true} key={listItem.props.id} id={listItem.props.id} name={listItem.props.name} tags={listItem.props.tags} ingredients={listItem.props.ingredients} steps={listItem.props.steps} credits={listItem.props.credits}></ResultListItem>;
+        let popout = <ResultListItem isModal={true} id={listItem.props.id} name={listItem.props.name} tags={listItem.props.tags} ingredients={listItem.props.ingredients} steps={listItem.props.steps} credits={listItem.props.credits}></ResultListItem>;
 
         return <Modal content={popout} onclick={this.setShouldSetUrl}></Modal>;
     }
@@ -77,13 +77,13 @@ class ResultList extends React.Component {
      * Get result items from the result list.
      */
     getResultItems() {
-        this.resultItems = this.state.results.map( (el) => {
+        this.resultItems = this.state.results.map( (el, index) => {
             // Map the tests
             let tags = el.tag.map( (tag) => {
                 return <span key={tag.name} className="react-tagsinput-tag" onClick={(e)=>{e.stopPropagation(); e.preventDefault(); this.setFormTags([tag.name])}}>{tag.name}</span>
             } );
             // Map the ingredients display
-            let ingredients = el.ingredient.map( (ingredient, index) => {
+            let ingredients = el.ingredient.map( (ingredient, index2) => {
                 let options = ingredient.option.map( (option) => {
                     let allergens = option.allergen.map( (allergen) => {
                         return <span key={allergen.name} className="ResultListItemAllergen">{allergen.name}</span>
@@ -92,8 +92,8 @@ class ResultList extends React.Component {
                         <span className="ResultListItemOptionName">{option.quantity + " " + option.name}</span>
                         <span className={"ResultListItemAllergens " + (!option.allergen.length ? "hidden" : "")}>({allergens})</span>
                     </span>
-                } ).reduce((acc, x) => acc === null ? [x] : [acc, <b> / </b>, x], null);;
-                return <li key={index} className="ResultListItemIngredient">{options}</li>
+                } ).reduce((acc, x) => acc === null ? [x] : [acc, <b> / </b>, x], null);
+                return <li key={index + "-" + index2} className="ResultListItemIngredient">{options}</li>
             } );
             let credits;
             if( el.credit ) {

@@ -16,7 +16,6 @@ import Helmet from 'react-helmet';
 import Disclaimer from './Disclaimer.js';
 import About from './About';
 import Instructions from './Instructions';
-import Tips from "./Tips";
 
 const SAFES_TITLE = "Match recipes containing only the listed items";
 const ALLERGENS_TITLE = "Match recipes that don't contain the listed items";
@@ -436,7 +435,6 @@ class Search extends React.Component {
             <Route path="/disclaimer" render={() => <Modal content={<Disclaimer></Disclaimer>}></Modal>}></Route>
             <Route path="/about" render={() => <Modal content={<About></About>}></Modal>}></Route>
             <Route path="/instructions" render={() => <Modal content={<Instructions></Instructions>}></Modal>}></Route>
-            <Route path="/tips" render={() => <Modal content={<Tips></Tips>}></Modal>}></Route>
         </div>
     }
 }

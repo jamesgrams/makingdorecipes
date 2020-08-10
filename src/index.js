@@ -81,6 +81,9 @@ app.use( express.json() );
 app.use(cookieParser());
 app.use("/", express.static("assets/build"));
 app.use("/add", express.static("assets/build/index.html"));
+app.use("/disclaimer", express.static("assets/build/index.html"));
+app.use("/about", express.static("assets/build/index.html"));
+app.use("/instructions", express.static("assets/build/index.html"));
 
 // For the Facebook Crawler, we can't set og tags dynamically with React Helmet
 // So we need to inject them
