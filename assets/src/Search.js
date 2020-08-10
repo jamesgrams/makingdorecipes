@@ -401,6 +401,7 @@ class Search extends React.Component {
                         <input
                             name="flexibility"
                             type="number"
+                            min="0"
                             pattern="[0-9]*"
                             value={this.state.flexibility}
                             onChange={this.handleChange} />
