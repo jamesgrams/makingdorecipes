@@ -119,7 +119,7 @@ app.get("/recipe", async function(request, response) {
                 return;
             }
         }
-        let recipes = await getRecipes(request.query.id, request.query.search, request.query.tags ? request.query.tags.split(",") : null, request.query.safes ? request.query.safes.split(",") : null, request.query.allergens ? request.query.allergens.split(",") : null, request.query.flexibility ? parseInt(request.query.flexibility) : 0, request.query.prefix ? true : false, request.query.unapproved ? true : false, request.query.all ? true : false, parseInt(request.query.from) );
+        let recipes = await getRecipes(request.query.id, request.query.search, request.query.tags ? request.query.tags.split(",") : null, request.query.safes ? request.query.safes.split(",") : null, request.query.allergens ? request.query.allergens.split(",") : null, request.query.flexibility ? parseInt(request.query.flexibility) : 0, request.query.prefix ? true : false, request.query.unapproved ? true : false, request.query.all ? true : false, parseInt(request.query.from), parseInt(request.query.seed) );
         writeResponse(response, SUCCESS, recipes);
     }
     catch(err) {
@@ -302,9 +302,10 @@ function writeResponse( response, status, object, code, contentType ) {
  * @param {boolean} [unapproved] - True if unapproved recipes should be the in the result (restricted to admins).
  * @param {boolean} [all] - True if we should fetch all (restricted to admins and overrides unapproved value).
  * @param {number} [from] - The starting position.
+ * @param {number} [seed] - The random seed.
  * @returns {Promise<Array>} - A promise containing an array of all the response objects.
  */
-async function getRecipes( id, search, tags, safes, allergens, flexibility=0, prefix=false, unapproved=false, all=false, from=0 ) {
+async function getRecipes( id, search, tags, safes, allergens, flexibility=0, prefix=false, unapproved=false, all=false, from=0, seed=0 ) {
 
     // Error check
     if( id && !errorCheckType(id, "string") ) return Promise.reject(BAD_REQUEST);
@@ -320,6 +321,7 @@ async function getRecipes( id, search, tags, safes, allergens, flexibility=0, pr
     if( unapproved && !errorCheckType(unapproved, "boolean") ) return Promise.reject(BAD_REQUEST);
     if( all && !errorCheckType(all, "boolean") ) return Promise.reject(BAD_REQUEST);
     if( from && !errorCheckType(from, "number") ) return Promise.reject(BAD_REQUEST);
+    if( seed && !errorCheckType(seed, "number") ) return Promise.reject(BAD_REQUEST);
 
     // This array will contain all the parts of our search - search, tags, and allergens.
     let searchParts = [];
@@ -443,7 +445,6 @@ async function getRecipes( id, search, tags, safes, allergens, flexibility=0, pr
             };
         }
         else {
-            console.log(flexibility+1);
             allergensSection = {
                 "bool": {
                     "must_not": {
@@ -491,14 +492,34 @@ async function getRecipes( id, search, tags, safes, allergens, flexibility=0, pr
 
         searchParts.push(allergensSection);
     }
+
+    let searchQuery = {
+        "bool": {
+            "must": searchParts
+        }
+    };
+
+    // we allow results to be random when there is no search or tags
+    // we do allow flexibility to be random as it would make more sense
+    // to just search without flexibility to find those.
+    // we do not currently put items with say 0 allergens at the top of the
+    // list when 1 allergen is allowed.
+    if( !search && !tags ) {
+        // just safes or allergens, give some randomness.
+        searchQuery = {
+            "function_score": {
+                "random_score": {
+                    "seed": seed,
+                    "field": "_seq_no"
+                },
+                "query": searchQuery
+            }
+        };
+    }
     
     let body = {
         "size": RESULTS_SIZE,
-        "query": {
-            "bool": {
-                "must": searchParts
-            }
-        },
+        "query": searchQuery,
         "sort": [
             "_score",
             {"_id":"asc"}

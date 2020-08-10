@@ -138,7 +138,7 @@ class ResultList extends React.Component {
             <InfiniteScroll
                 dataLength={this.state.pseudoDataLength}
                 next={() => {
-                    this.fetchRecipes(null,null,this.state.results.length).then( (json) => {
+                    this.fetchRecipes(null,null,this.state.results.length,this.props.seed).then( (json) => {
                         if( json.recipes.length ) {
                             let results = this.state.results;
                             results = results.concat(json.recipes);

@@ -37,6 +37,7 @@ class Search extends React.Component {
             "itemsSuggestions": [],
             "tagsSuggestions": [],
             "recipeSuggestions": [],
+            "seed": 0,
             "isAdmin": cookie.load("making-do-recipes-token") ? true : false
         }
         this.state = {...this.state, ...this.getStateFromParams()};
@@ -142,7 +143,7 @@ class Search extends React.Component {
             if( this.state.tags.indexOf(tag) === -1 ) filteredTags.push(tag);
         }
         currentTags = currentTags.concat(filteredTags);
-        this.setState({tags: currentTags});
+        this.setState({tags: currentTags,moreShown:true});
     }
 
     /**
@@ -162,9 +163,10 @@ class Search extends React.Component {
      * @param {boolean} [prefix] - True if this is a prefix search.
      * @param {string} [id] - The id of the recipe.
      * @param {string} [from] - Where to start from
+     * @param {string} [seed] - The seed to start random from.
      * @returns {Promise<Object>} - A promise containing the fetched object.
      */
-    fetchRecipes( prefix, id, from ) {
+    fetchRecipes( prefix, id, from, seed ) {
         let promise = new Promise( (resolve, reject) => {
 
             // When we specficy from, we want to get more results based on the search
@@ -195,6 +197,9 @@ class Search extends React.Component {
                 if( from ) {
                     paramsObject.from = from;
                 }
+                if( seed ) {
+                    paramsObject.seed = seed;
+                }
             }
             
             let params = new URLSearchParams(Object.entries(paramsObject));
@@ -223,9 +228,10 @@ class Search extends React.Component {
         if( this.state.gettingResults ) return;
         // keep the height while 
         // fade the results if they are shown
-        this.setState({"gettingResults": true, "resultsErrorShown": false, "resultsShown": false, "resultsFaded": this.state.resultsShown}, () => {
+        let seed = Math.floor(Math.random()*1000); // set a new randomness seed each time we do a search (note: not when we do infinite scroll to keep pagination)
+        this.setState({"seed": seed, "gettingResults": true, "resultsErrorShown": false, "resultsShown": false, "resultsFaded": this.state.resultsShown}, () => {
 
-            this.fetchRecipes().then( (json) => {
+            this.fetchRecipes(null,null,null,this.state.seed).then( (json) => {
                 this.setState({"gettingResults": false,"resultsFaded":false});
                 this.resultList.current.setState({results: json.recipes, total: json.total, noMoreResults: false, pseudoDataLength: 0});
                 if( json.recipes.length ) this.setState({resultsShown: true}, () => {if(!noUrl)this.setUrl()});
@@ -319,6 +325,7 @@ class Search extends React.Component {
                                 name: "search",
                                 type: "search",
                                 value: this.state.search,
+                                placeholder: "e.g. Sugar Cookies",
                                 onChange: this.handleChange
                             }}
                             onSuggestionSelected={(e, {suggestion}) => {
@@ -399,7 +406,7 @@ class Search extends React.Component {
                 </div>
             </form>
             <div className={"SearchResults " + (this.state.resultsFaded ? "faded" : (this.state.resultsShown ? "" : "hidden"))}>
-                <ResultList ref={this.resultList} setFormTags={this.setFormTags} fetchRecipes={this.fetchRecipes} getStateFromParams={this.getStateFromParams} setShouldSetUrl={() => this.shouldSetUrl = true} getParentResultsFaded={() => this.state.resultsFaded}></ResultList>
+                <ResultList ref={this.resultList} setFormTags={this.setFormTags} fetchRecipes={this.fetchRecipes} getStateFromParams={this.getStateFromParams} seed={this.state.seed} setShouldSetUrl={() => this.shouldSetUrl = true} getParentResultsFaded={() => this.state.resultsFaded}></ResultList>
             </div>
             <div className={"SearchResultsError " + (this.state.resultsErrorShown ? "" : "hidden")}>
                 {this.state.resultsError}
