@@ -315,7 +315,7 @@ class Submit extends React.Component {
                                         )
                                     }
                                 } );
-                                setTimeout(()=>document.activeElement.blur(),0);
+                                setTimeout(()=>document.activeElement.blur(),1);
                             }}
                             >
                         </Autosuggest>
