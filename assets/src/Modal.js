@@ -40,7 +40,7 @@ class Modal extends React.Component {
      * Render the element.
      */
     render() {
-        let mask = <Link to="/" onClick={this.props.onclick}>
+        let mask = <Link to={"/" + (this.props.query ? this.props.query : "")} onClick={this.props.onclick}>
             <div className="Mask"></div>
         </Link>
 

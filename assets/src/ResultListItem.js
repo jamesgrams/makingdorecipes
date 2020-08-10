@@ -94,7 +94,7 @@ class ResultListItem extends React.Component {
                 <meta propery="twitter:description" content={metaDescription}/>
             </Helmet>
         }
-        return <HtmlTag className="ResultListItem" key={this.props.id}>
+        return <HtmlTag className="ResultListItem">
             {helmet}
             <div className="ResultListItemName">{this.props.name}</div>
             <div className="ResultListItemTags">{this.props.tags}</div>

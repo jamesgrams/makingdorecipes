@@ -41,6 +41,7 @@ class Search extends React.Component {
             "tagsSuggestions": [],
             "recipeSuggestions": [],
             "seed": 0,
+            "currentQuery": window.location.pathname === "/" ? window.location.search : "",
             "isAdmin": cookie.load("making-do-recipes-token") ? true : false
         }
         this.state = {...this.state, ...this.getStateFromParams()};
@@ -64,7 +65,6 @@ class Search extends React.Component {
         }
 
         this.overrideAddMaskWarning = false;
-        this.shouldSetUrl = false;
 
         this.resultList = React.createRef();
 
@@ -76,6 +76,7 @@ class Search extends React.Component {
         this.setFormTags = this.setFormTags.bind(this);
         this.autocompleteTagInput = this.autocompleteTagInput.bind(this);
         this.setUrl = this.setUrl.bind(this);
+        this.fetchRecipes = this.fetchRecipes.bind(this);
         this.getStateFromParams = this.getStateFromParams.bind(this);
     }
 
@@ -117,6 +118,18 @@ class Search extends React.Component {
      * @param {boolean} replaceState - True if the state should be replaced.
      */
     setUrl( replaceState ) {
+        let newUrl = this.getUrl();
+
+        // use react-router (history is defined because we wrap with withRouter)
+        this.props.history[replaceState ? "replace" : "push"](newUrl);
+        this.setState({"currentQuery": newUrl});
+    }
+
+    /**
+     * Get URL from the state.
+     * @returns {String} - The url to return.
+     */
+    getUrl() {
         let paramsObject = {
             search: this.state.search,
             tags: this.state.tags.join(","),
@@ -132,10 +145,7 @@ class Search extends React.Component {
             }
         }
         let params = new URLSearchParams(Object.entries(paramsObject));
-        let newUrl = Object.keys(paramsObject).length ? "?" + params.toString() : "";
-
-        // use react-router (history is defined because we wrap with withRouter)
-        this.props.history[replaceState ? "replace" : "push"](newUrl);
+        return Object.keys(paramsObject).length ? "?" + params.toString() : "";
     }
 
     /**
@@ -414,27 +424,24 @@ class Search extends React.Component {
                 </div>
             </form>
             <div className={"SearchResults " + (this.state.resultsFaded ? "faded" : (this.state.resultsShown ? "" : "hidden"))}>
-                <ResultList ref={this.resultList} setFormTags={this.setFormTags} fetchRecipes={this.fetchRecipes} getStateFromParams={this.getStateFromParams} seed={this.state.seed} setShouldSetUrl={() => this.shouldSetUrl = true} getParentResultsFaded={() => this.state.resultsFaded}></ResultList>
+                <ResultList ref={this.resultList} setFormTags={this.setFormTags} fetchRecipes={this.fetchRecipes} seed={this.state.seed} searchQuery={this.state.currentQuery} getParentResultsFaded={() => this.state.resultsFaded}></ResultList>
             </div>
             <div className={"SearchResultsError " + (this.state.resultsErrorShown ? "" : "hidden")}>
                 {this.state.resultsError}
             </div>
-            <Route exact path="/" render={() => {if(this.shouldSetUrl) {this.shouldSetUrl = false; if(this.state.resultsShown) this.setUrl(true);}}}></Route>
+            <Route exact path="/" render={() => {}}></Route>
             <Link to="/add" className="SearchAddLink">
                 +
             </Link>
-            <Route path="/add" render={() => <Modal className="SubmitModalContent" content={<Submit setOverrideAddMaskWarning={(set) => this.overrideAddMaskWarning = set} autocompleteTagInput={this.autocompleteTagInput}></Submit>} onclick={(e) => {
-                if( this.overrideAddMaskWarning || window.confirm("Are you sure you want to close this form?") ) {
-                    this.shouldSetUrl = true;
-                }
-                else {
+            <Route path="/add" render={() => <Modal query={this.state.currentQuery} className="SubmitModalContent" content={<Submit setOverrideAddMaskWarning={(set) => this.overrideAddMaskWarning = set} autocompleteTagInput={this.autocompleteTagInput}></Submit>} onclick={(e) => {
+                if( !this.overrideAddMaskWarning && !window.confirm("Are you sure you want to close this form?") ) {
                     e.preventDefault();
                     e.stopPropagation();
                 }
             }}></Modal>}/>
-            <Route path="/disclaimer" render={() => <Modal content={<Disclaimer></Disclaimer>}></Modal>}></Route>
-            <Route path="/about" render={() => <Modal content={<About></About>}></Modal>}></Route>
-            <Route path="/instructions" render={() => <Modal content={<Instructions></Instructions>}></Modal>}></Route>
+            <Route path="/disclaimer" render={() => <Modal query={this.state.currentQuery} content={<Disclaimer></Disclaimer>}></Modal>}></Route>
+            <Route path="/about" render={() => <Modal query={this.state.currentQuery} content={<About></About>}></Modal>}></Route>
+            <Route path="/instructions" render={() => <Modal query={this.state.currentQuery} content={<Instructions></Instructions>}></Modal>}></Route>
         </div>
     }
 }
