@@ -249,9 +249,10 @@ class Search extends React.Component {
 
             this.fetchRecipes(null,null,null,this.state.seed).then( (json) => {
                 this.setState({"gettingResults": false,"resultsFaded":false});
-                this.resultList.current.setState({results: json.recipes, total: json.total, noMoreResults: false, pseudoDataLength: 0});
-                if( json.recipes.length ) this.setState({resultsShown: true}, () => {if(!noUrl)this.setUrl()});
-                else this.setState({resultsError: "No recipes found.", resultsErrorShown: true, "resultsShown": false}, () => {if(!noUrl)this.setUrl()});
+                this.resultList.current.setState({results: json.recipes, total: json.total, noMoreResults: false, pseudoDataLength: 0}, () => {
+                    if( json.recipes.length ) this.setState({resultsShown: true}, () => {if(!noUrl)this.setUrl()});
+                    else this.setState({resultsError: "No recipes found.", resultsErrorShown: true, "resultsShown": false}, () => {if(!noUrl)this.setUrl()});
+                });
             } ).catch(err => {
                 this.setState({"gettingResults": false,"resultsFaded":false});
                 this.setState({resultsError: "Could not fetch recipes, please try again later.", resultsErrorShown: true, "resultsShown": false})

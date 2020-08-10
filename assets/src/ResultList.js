@@ -128,34 +128,38 @@ class ResultList extends React.Component {
      * Render the element.
      */
     render() {
-        this.getResultItems();
-        return <ul className="ResultList">
-            <div className={"ResultListTotal " + (this.state.total ? "" : "hidden")}>
-                {this.state.total} Result{this.state.total !== 1 ? "s" : ""}
-            </div>
-            <InfiniteScroll
-                dataLength={this.state.pseudoDataLength}
-                next={() => {
-                    this.fetchRecipes(null,null,this.state.results.length,this.props.seed).then( (json) => {
-                        if( json.recipes.length ) {
-                            let results = this.state.results;
-                            results = results.concat(json.recipes);
-                            this.setState({results:results,pseudoDataLength:results.length});
-                        }
-                        else {
-                            this.setState({noMoreResults:true,pseudoDataLength:this.state.results.length+1});
-                        }
-                    } );
-                }}
-                hasMore={!this.state.noMoreResults}
-                loader={<div className="ResultListScrollLoading">Loading...</div>}
-            >
-                {this.resultItems}
-            </InfiniteScroll>
-            <Route path="/recipe/:id" render={({match}) => {
-                return this.setRecipeModalContent( match.params.id );
-            }}/>
-        </ul>
+        let responseVal = "";
+        if( this.state.total ) {
+            this.getResultItems();
+            responseVal = <ul className="ResultList">
+                <div className={"ResultListTotal " + (this.state.total ? "" : "hidden")}>
+                    {this.state.total} Result{this.state.total !== 1 ? "s" : ""}
+                </div>
+                <InfiniteScroll
+                    dataLength={this.state.pseudoDataLength}
+                    next={() => {
+                        this.fetchRecipes(null,null,this.state.results.length,this.props.seed).then( (json) => {
+                            if( json.recipes.length ) {
+                                let results = this.state.results;
+                                results = results.concat(json.recipes);
+                                this.setState({results:results,pseudoDataLength:results.length});
+                            }
+                            else {
+                                this.setState({noMoreResults:true,pseudoDataLength:this.state.results.length+1});
+                            }
+                        } );
+                    }}
+                    hasMore={!this.state.noMoreResults}
+                    loader={<div className="ResultListScrollLoading">Loading...</div>}
+                >
+                    {this.resultItems}
+                </InfiniteScroll>
+                <Route path="/recipe/:id" render={({match}) => {
+                    return this.setRecipeModalContent( match.params.id );
+                }}/>
+            </ul>
+        }
+        return responseVal;
     }
 }
 
