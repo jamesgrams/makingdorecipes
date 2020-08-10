@@ -68,6 +68,9 @@ class Search extends React.Component {
 
         this.resultList = React.createRef();
 
+        let possItems = ["Sugar Cookies","Fudge Pops","Pancakes","Peanut Butter Cookies","Old Fashioned Donuts","Chicken Fingers","Blueberry Donuts"];
+        this.searchPlaceholder = possItems[Math.floor(Math.random()*possItems.length)];
+
         this.handleChange = this.handleChange.bind(this);
         this.handleSubmit = this.handleSubmit.bind(this);
         this.setFormTags = this.setFormTags.bind(this);
@@ -328,10 +331,7 @@ class Search extends React.Component {
                                 name: "search",
                                 type: "search",
                                 value: this.state.search,
-                                placeholder: "e.g. " + (() => {
-                                    let possItems = ["Sugar Cookies","Fudge Pops","Pancakes","Peanut Butter Cookies","Old Fashioned Donuts","Chicken Fingers","Blueberry Donuts"]
-                                    return possItems[Math.floor(Math.random()*possItems.length)];
-                                })(),
+                                placeholder: "e.g. " + this.searchPlaceholder,
                                 onChange: this.handleChange
                             }}
                             onSuggestionSelected={(e, {suggestion}) => {
