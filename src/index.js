@@ -3,7 +3,6 @@
  * @author  James Grams
  */
 
- // TODO fix logo
  // TODO data backups
 
 /******************************************* Constants *********************************************/
@@ -43,6 +42,10 @@ const REPLACE_TITLE_PLACEHOLDER = "REPLACE_TITLE_PLACEHOLDER";
 const REPLACE_DESCRIPTION_PLACEHOLDER = "REPLACE_DESCRIPRION_PLACEHOLDER";
 const OG_PLACEHOLDER = "OG_PLACEHOLDER";
 const AWS_S3_BUCKET=process.env.AWS_S3_BUCKET;
+const SUGGESTABLE_REPLACE = {
+    "molass": "molasses",
+    "blackstrap molass": "blackstrap molasses"
+}
 
 /****************** Setup connection to Elasticsearch and start the Express app. ******************/
 
@@ -967,15 +970,18 @@ async function indexRecipe( id, name, tag, steps, approved, ingredient, credit )
     // We could use the analyze API with elasticseach, but doing it locally prevents the external request.
     for( let t of tag ) {
         t.name = striptags(pluralize.singular(t.name.toLowerCase())).trim(); // tags, we actually do want singular and lower for display not just when suggestable
+        if( SUGGESTABLE_REPLACE[t.name] ) t.name = SUGGESTABLE_REPLACE[t.name];
     }
     for( let i of ingredient ) {
         for( let o of i.option ) {
             o.name = striptags(o.name).trim();
             o.quantity = striptags(o.quantity).trim();
             o.name_suggestable = pluralize.singular(o.name.toLowerCase()).trim();
+            if( SUGGESTABLE_REPLACE[o.name_suggestable] ) o.name_suggestable = SUGGESTABLE_REPLACE[o.name_suggestable];
             for( let a of o.allergen ) {
                 a.name = striptags(a.name).trim();
                 a.name_suggestable = pluralize.singular(a.name.toLowerCase()).trim();
+                if( SUGGESTABLE_REPLACE[a.name_suggestable] ) a.name_suggestable = SUGGESTABLE_REPLACE[a.name_suggestable];
             }
         }
     }
