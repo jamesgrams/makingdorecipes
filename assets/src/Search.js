@@ -347,7 +347,7 @@ class Search extends React.Component {
                             }}
                             onSuggestionSelected={(e, {suggestion}) => {
                                 this.setState({"search":suggestion}, this.handleSubmit);
-                                setTimeout(()=>document.activeElement.blur(),1);
+                                setTimeout(()=>document.activeElement.blur(),25);
                             }}
                             >
                         </Autosuggest>
