@@ -3,8 +3,6 @@
  * @author  James Grams
  */
 
- // TODO data backups
-
 /******************************************* Constants *********************************************/
 
 const express = require('express');

@@ -14,6 +14,9 @@ import Submit from "./Submit";
 import cookie from 'react-cookies';
 import Helmet from 'react-helmet';
 import Disclaimer from './Disclaimer.js';
+import About from './About';
+import Instructions from './Instructions';
+import Tips from "./Tips";
 
 const SAFES_TITLE = "Match recipes containing only the listed items";
 const ALLERGENS_TITLE = "Match recipes that don't contain the listed items";
@@ -326,11 +329,15 @@ class Search extends React.Component {
                                 name: "search",
                                 type: "search",
                                 value: this.state.search,
-                                placeholder: "e.g. Sugar Cookies",
+                                placeholder: "e.g. " + (() => {
+                                    let possItems = ["Sugar Cookies","Fudge Pops","Pancakes","Peanut Butter Cookies","Old Fashioned Donuts","Chicken Fingers","Blueberry Donuts"]
+                                    return possItems[Math.floor(Math.random()*possItems.length)];
+                                })(),
                                 onChange: this.handleChange
                             }}
                             onSuggestionSelected={(e, {suggestion}) => {
                                 this.setState({"search":suggestion}, this.handleSubmit);
+                                setTimeout(()=>document.activeElement.blur(),0);
                             }}
                             >
                         </Autosuggest>
@@ -385,6 +392,7 @@ class Search extends React.Component {
                         <input
                             name="flexibility"
                             type="number"
+                            pattern="[0-9]*"
                             value={this.state.flexibility}
                             onChange={this.handleChange} />
                     </label>
@@ -426,6 +434,9 @@ class Search extends React.Component {
                 }
             }}></Modal>}/>
             <Route path="/disclaimer" render={() => <Modal content={<Disclaimer></Disclaimer>}></Modal>}></Route>
+            <Route path="/about" render={() => <Modal content={<About></About>}></Modal>}></Route>
+            <Route path="/instructions" render={() => <Modal content={<Instructions></Instructions>}></Modal>}></Route>
+            <Route path="/tips" render={() => <Modal content={<Tips></Tips>}></Modal>}></Route>
         </div>
     }
 }
