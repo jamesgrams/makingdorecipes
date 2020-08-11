@@ -33,6 +33,37 @@ Set the `ELASTICSEARCH_HOST`,`TEST_USERNAME`, and `TEST_PASSWORD` environment va
 Then run: `node tests/test.js`.
 The output should not throw any errors or display anything in red. In addition, it should tell you when bad documents are blocked.
 
+## Updating Elasticsearch Index
+1. PUT the `mapping.json` file contents to `/recipe_test`
+2. Run:
+```
+POST _reindex
+{
+  "source": {
+    "index": "recipe_test"
+  },
+  "dest": {
+    "index": "recipe"
+  }
+}
+```
+3. Do a test search to make sure all the documents copied to recipe_test
+4. `DELETE /recipe`
+5. PUT the `mapping.json` file contents to `/recipe`
+6. Run
+```
+POST _reindex
+{
+  "source": {
+    "index": "recipe"
+  },
+  "dest": {
+    "index": "recipe_test"
+  }
+}
+```
+6. Make sure all the results are now available on Making Do Recipes and run `DELETE /recipe_test`
+
 ## Credits
 Logo - logomaker.com (logomakr.com/0crQUx)
 Special Thanks to all the npm package authors

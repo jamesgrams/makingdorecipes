@@ -560,46 +560,49 @@ async function getRecipes( id, search, tags, safes, allergens, flexibility=0, pr
  */
 async function getTagsPrefix( search ) {
 
-    if( !errorCheckType(search, "string") ) return Promise.reject(BAD_REQUEST);
-
     let body = {
+        "_source": false,
         "query": {
             "bool": {
                 "filter": {
                     "term": {
                         "approved": true
                     }
-                }
-            }
-        },
-        "size": 0,
-        "aggs": {
-            "recipes": {
-                "nested": {
-                    "path": "tag"
                 },
-                "aggs": {
-                    "tags": {
-                        "filter": {
-                            "multi_match": {
-                                "query": search,
-                                "type": "bool_prefix",
-                                "fields": [
-                                        "tag.name",
-                                        "tag.name._2gram",
-                                        "tag.name._3gram"
-                                ]
-                            }
-                        },
-                        "aggs": {
-                            "tags_filtered": {
-                                "terms": {
-                                    "field": "tag.name.keyword"
+                "must": [
+                    {
+                        "nested": {
+                            "inner_hits": {"size":ELASTICSEARCH_INNER_HITS_COUNT},
+                            "path": "tag",
+                            "query": {
+                                "bool": {
+                                    "should": [
+                                        {
+                                            "multi_match": {
+                                                "query": search,
+                                                "type": "bool_prefix",
+                                                "fuzziness": ELASTICSEARCH_FUZZINESS,
+                                                "fields": [
+                                                        "tag.name",
+                                                        "tag.name._2gram",
+                                                        "tag.name._3gram"
+                                                ]
+                                            }
+                                        },
+                                        {
+                                            "match": {
+                                                "tag.name": {
+                                                    "query": search,
+                                                    "fuzziness": ELASTICSEARCH_FUZZINESS // The bool prefix query doesn't search for fuzinness on the last item in the list, but we can here
+                                                }
+                                            }
+                                        }
+                                    ]
                                 }
                             }
                         }
                     }
-                }
+                ]
             }
         }
     };
@@ -609,7 +612,19 @@ async function getTagsPrefix( search ) {
         body: body
     });
 
-    return Promise.resolve(response.aggregations.recipes.tags.tags_filtered.buckets.map(el => el.key));
+    let buckets = {}; // keys = name_suggestable, value = max_score
+    for( let recipeHit of response.hits.hits ) {
+        for( let tagHit of recipeHit.inner_hits.tag.hits.hits ) {
+            buckets[ tagHit._source.name ] = Math.max( tagHit._score, buckets[ tagHit._source.name ] || 0 );
+        }
+    }
+    let responseArray = Object.keys(buckets).sort((a,b) => {
+        //let maxAHit = a.top.hits.hits
+        if( buckets[a] > buckets[b] ) return -1;
+        if( buckets[b] > buckets[a] ) return 1;
+        return 0;
+    }).slice(0, MAX_SUGGESTIONS);
+    return Promise.resolve(responseArray);
 }
 
 /**
@@ -686,7 +701,9 @@ async function getOptionsPrefix( search ) {
     // returned is the score for the root document which has already averaged out of all the scores of its nested documents (meaning all options for a recipe would have the same value). 
     // The only way to get the nested score is through inner hits.
     // This article explains sortiny by score - but that score is for the root, even though nested top_hits nicely returns the source of the nested match, it still gives the root doc score.
-        
+    // This problem would show up if we search for coconut oil. The match query would match avacode oil on oil.
+    // Since avacodo oil is a substitute, it would get the same score as coconut oil as they are from the same root recipe, which would have the same score.
+
     let buckets = {}; // keys = name_suggestable, value = max_score
     for( let recipeHit of response.hits.hits ) {
         for( let ingredientHit of recipeHit.inner_hits.ingredient.hits.hits ) {
