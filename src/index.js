@@ -364,11 +364,26 @@ async function getRecipes( id, search, tags, safes, allergens, flexibility=0, pr
         }
         else {
             searchParts.push({
-                "match": {
-                    "name": {
-                        "query": search,
-                        "fuzziness": ELASTICSEARCH_FUZZINESS
-                    }
+                "bool": {
+                    "should": [
+                        {
+                            "match": {
+                                "name": {
+                                    "query": search,
+                                    "fuzziness": ELASTICSEARCH_FUZZINESS,
+                                    "boost": 2
+                                }
+                            }
+                        },
+                        {
+                            "nested": {
+                                "path": "tag",
+                                "query": {
+                                    "match_phrase": {"tag.name": search}
+                                }
+                            }
+                        }
+                    ]
                 }
             });
         }
