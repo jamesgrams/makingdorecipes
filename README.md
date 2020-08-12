@@ -4,7 +4,7 @@ An Elasticsearch and React App to find and share recipes for people with allergi
 
 ## Run
 1. Clone this repo and `cd` into it.
-2. Make sure Elasticsearch is setup. You will need to `PUT /recipe` the contents of `mappings/mapping.json`.
+2. Make sure Elasticsearch is setup. You will need to `PUT /recipe` the contents of `mappings/mapping.json`. Do the same with `mappings/mapping.json` into `/subscription`.
 3. Set environment variables. (Important to do this before 3, because the following step will build the React app which looks at environment variables)
 4. `npm install`
 5. `npm start` or `heroku local web`
@@ -21,6 +21,10 @@ An Elasticsearch and React App to find and share recipes for people with allergi
 * `AWS_ACCESS_KEY_ID` - Access key for image uploads to Amazon S3
 * `AWS_SECRET_ACCESS_KEY` - Secret access key for AWS
 * `AWS_S3_BUCKET` - The name of the AWS S3 bucket to put images in
+* `MAILER_EMAIL` - The email address to send emails from
+* `MAILER_PASSWORD` - The password of the email to send emails from
+* `MAILER_HOST` - The SMTP host to send emails from
+* `MAILER_PORT` - The port to send emails from
 
 ## Admin Login
 Visit `/login.html` and login. A cookie will be set appropriately. You will then be allowed to search for unapproved recipes, edit recipes, delete recipes, and approve recipes. To approve a recipe, simply edit and submit it while logged in.
@@ -40,10 +44,10 @@ The output should not throw any errors or display anything in red. In addition, 
 POST _reindex
 {
   "source": {
-    "index": "recipe_test"
+    "index": "recipe"
   },
   "dest": {
-    "index": "recipe"
+    "index": "recipe_test"
   }
 }
 ```
@@ -55,10 +59,10 @@ POST _reindex
 POST _reindex
 {
   "source": {
-    "index": "recipe"
+    "index": "recipe_test"
   },
   "dest": {
-    "index": "recipe_test"
+    "index": "recipe"
   }
 }
 ```

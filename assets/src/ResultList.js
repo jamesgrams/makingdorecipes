@@ -59,7 +59,11 @@ class ResultList extends React.Component {
      */
     setRecipeModalContent( id ) {
         // see if we already have the necessary results on the page
-        let listItem = this.resultItems.filter( el => el.props.children.props.id === id )[0];
+        let listItem = null;
+        try {
+            listItem = this.resultItems.filter( el => el.props.children.props.id === id )[0];
+        }
+        catch(err) {}
         if( !listItem ) {
             this.needsToFetch = id;
             return;
@@ -128,9 +132,11 @@ class ResultList extends React.Component {
      * Render the element.
      */
     render() {
-        let responseVal = "";
+        this.getResultItems(); // needed out here for direct loading of recipe.
+        let responseVal = <Route path="/recipe/:id" render={({match}) => {
+            return this.setRecipeModalContent( match.params.id );
+        }}/>;
         if( this.state.total ) {
-            this.getResultItems();
             responseVal = <ul className="ResultList">
                 <div className={"ResultListTotal " + (this.state.total ? "" : "hidden")}>
                     {this.state.total} Result{this.state.total !== 1 ? "s" : ""}
@@ -154,10 +160,8 @@ class ResultList extends React.Component {
                 >
                     {this.resultItems}
                 </InfiniteScroll>
-                <Route path="/recipe/:id" render={({match}) => {
-                    return this.setRecipeModalContent( match.params.id );
-                }}/>
-            </ul>
+                {responseVal}
+            </ul>;
         }
         return responseVal;
     }

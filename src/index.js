@@ -18,12 +18,14 @@ const { v1: uuidv1 } = require('uuid');
 const sanitizeHtml = require('sanitize-html');
 const { parse } = require('node-html-parser');
 const compression = require('compression');
+const nodemailer = require('nodemailer');
 
 const PORT=process.env.PORT || 80;
 const ELASTICSEARCH_INDEX = "recipe";
 const ELASTICSEARCH_SUBSCRIPTION_INDEX = "subscription";
 const ELASTICSEARCH_FUZZINESS = "AUTO";
 const RESULTS_SIZE = 10;
+const MAX_RESULTS_SIZE = 10000;
 const MAX_SUGGESTIONS = 7;
 const ELASTICSEARCH_INNER_HITS_COUNT = 100;
 const HTTP_OK = 200;
@@ -320,9 +322,10 @@ function writeResponse( response, status, object, code, contentType ) {
  * @param {boolean} [all] - True if we should fetch all (restricted to admins and overrides unapproved value).
  * @param {number} [from] - The starting position.
  * @param {number} [seed] - The random seed.
+ * @param {boolean} [onlyLastDay] - Only fetch recipes from the last day (not exposed to endpoint).
  * @returns {Promise<Array>} - A promise containing an array of all the response objects.
  */
-async function getRecipes( id, search, tags, safes, allergens, flexibility=0, prefix=false, unapproved=false, all=false, from=0, seed=0 ) {
+async function getRecipes( id, search, tags, safes, allergens, flexibility=0, prefix=false, unapproved=false, all=false, from=0, seed=0, onlyLastDay=false ) {
 
     // Error check
     if( id && !errorCheckType(id, "string") ) return Promise.reject(BAD_REQUEST);
@@ -339,6 +342,7 @@ async function getRecipes( id, search, tags, safes, allergens, flexibility=0, pr
     if( all && !errorCheckType(all, "boolean") ) return Promise.reject(BAD_REQUEST);
     if( from && !errorCheckType(from, "number") ) return Promise.reject(BAD_REQUEST);
     if( seed && !errorCheckType(seed, "number") ) return Promise.reject(BAD_REQUEST);
+    if( onlyLastDay && !errorCheckType(onlyLastDay, "boolean") ) return Promise.reject(BAD_REQUEST);
 
     // This array will contain all the parts of our search - search, tags, and allergens.
     let searchParts = [];
@@ -347,6 +351,16 @@ async function getRecipes( id, search, tags, safes, allergens, flexibility=0, pr
         searchParts.push({
             "term": {
                 "_id": id
+            }
+        });
+    }
+    if( onlyLastDay ) {
+        searchParts.push({
+            "range": {
+                "timestamp": {
+                    "gte": "now-1d/d",
+                    "lt": "now/d"
+                }
             }
         });
     }
@@ -550,7 +564,7 @@ async function getRecipes( id, search, tags, safes, allergens, flexibility=0, pr
     }
     
     let body = {
-        "size": RESULTS_SIZE,
+        "size": onlyLastDay ? MAX_RESULTS_SIZE : RESULTS_SIZE, // if its just the last day, we won't paginate.
         "query": searchQuery,
         "sort": [
             "_score",
@@ -986,8 +1000,15 @@ async function indexRecipe( id, name, tag, steps, approved, ingredient, credit )
 
     id = striptags(id);
     name = striptags(name).trim();
+    let timestamp = null;
     if( !id ) {
         id = await generateSlug(name);
+    }
+    else {
+        let currentRecipes = await getRecipes(id);
+        if( currentRecipes && currentRecipes[0] && !currentRecipes[0].approved ) {
+            timestamp = new Date().getTime(); // The first time the recipe is being approved, we set its date - used for fetching emails
+        }
     }
     if( credit ) {
         if( credit.name ) credit.name = striptags(credit.name).trim();
@@ -1037,7 +1058,8 @@ async function indexRecipe( id, name, tag, steps, approved, ingredient, credit )
         tag: tag,
         steps: steps,
         approved: approved,
-        ingredient: ingredient
+        ingredient: ingredient,
+        timestamp: timestamp
     };
     if( credit ) body.credit = credit;
 
@@ -1141,3 +1163,111 @@ function errorCheckType( value, type ) {
         return typeof value == type && !Array.isArray(value);
     }
 }
+
+///// Mailer section
+
+async function sendEmails() {
+
+    if( !process.env.MAILER_HOST ) return;
+
+    let smtp = nodemailer.createTransport({
+        host: process.env.MAILER_HOST,
+        port: process.env.MAILER_PORT,
+        secure: false,
+        auth: {
+            user: process.env.MAILER_EMAIL,
+            pass: process.env.MAILER_PASSWORD
+        }
+    });
+    
+    let afterKey = "";
+    while( true ) {
+
+        let body = {
+            "size": 0,
+            "aggs": {
+                "email_buckets": {
+                    "composite": {
+                        "size": 100,
+                        "sources": [
+                            { "subscription": { "terms": { "field": "email" } } }
+                        ]
+                    },
+                    "aggs": {
+                        // This filters out duplicates paths
+                        // We will send only 20 paths per user, so we don't need pagination
+                        // we should have all we need from these two aggregates, we don't need to do top hits
+                        "path_buckets": {
+                            "terms": {
+                                "size": 20,
+                                "field": "path"
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        if( afterKey ) body.aggs.email_buckets.composite.after = afterKey;
+
+        let response = await client.search({
+            index: ELASTICSEARCH_SUBSCRIPTION_INDEX,
+            body: body
+        });
+
+        // send the emails
+        for( let emailBucket of response.aggregations.email_buckets.buckets ) {
+            let email = emailBucket.key.subscription;
+            let reportItems = [];
+            for( let pathBucket of emailBucket.path_buckets.buckets ) {
+                let path = pathBucket.key;
+
+                // get the items
+                let params = new URLSearchParams(path);
+                // these come from the getStateFromParams and fetchRecipes method in the frontend code.
+                let state = {
+                    "search": params.get("search") || null,
+                    "items": params.get("items") ? params.get("items").split(",") : null,
+                    "safesMode": params.get("safesMode") === "false" ? false : true,
+                    "tags": params.get("tags") ? params.get("tags").split(",") : null,
+                    "flexibility": params.get("flexibility") || 0 // these first five are for the form
+                };
+                if( state.safesMode ) state.safes = state.items;
+                else state.allergens = state.items;
+
+                let reportTitle = `<h2>New Recipes for ${state.search ? `Query: ${state.search}, ` : ""}${state.items ? (state.safesMode ? "Safes: " : "Allergens: ")+state.items.join(", ")+", " : ""}${state.tags ? `Tags: ${state.tags.join(",")}, ` : ""}${state.flexibility ? `Flexibility: ${state.flexibility}, ` : ""}</h2>`;
+                reportTitle = reportTitle.replace(/\,\s*$/,"");
+                let reportBody = [];
+
+                let recipes = await getRecipes(null, state.search, state.tags, state.safes, state.allergens, state.flexibility, null, null, null, null, null, false);
+                if( !recipes.recipes.length ) continue; // no recipes
+
+                for( let recipe of recipes.recipes ) {
+                    reportBody.push(`<li><a target="_blank" href="https://makingdorecipes.com/recipe/${recipe.id}">${recipe.name}</a></li>`);
+                }
+
+                reportBody = `<ul>${reportBody.join("")}</ul>`;
+                reportItems.push(reportTitle + reportBody);
+            }
+            if( !reportItems.length ) continue; // nothing to report
+            let message = "<h1>New Recipes</h1>We have some new recipes that match the searches you have subscribed to on <a target='_blank' href='https://makingdorecipes.com'>Making Do Recipes</a>." + reportItems.join("");
+            try {
+                smtp.sendMail({
+                    from: '"Making Do Recipes" <admin@makingdorecipes.com>',
+                    to: email,
+                    subject: "New Recipes for You - " + new Date().toLocaleDateString(),
+                    html: message
+                })
+            }
+            catch(err) {
+                console.log(err); // should be ok
+            }
+        }
+
+        afterKey = response.aggregations.email_buckets.after_key;
+        if( !afterKey ) break; // no more items to fetch
+    }
+}
+
+/*setInterval( () => {
+    let lastSent = 
+}, 1000*60*20 ); // run every 20 minutes*/

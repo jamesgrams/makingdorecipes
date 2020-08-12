@@ -24,7 +24,8 @@
                         "synonyms": [
                             "milk, dairy",
                             "chickpea, garbanzo bean",
-                            "chocolate, cocoa, cocao"
+                            "chocolate, cocoa, cocao",
+                            "soy, soya, edamame, tofu"
                         ]
                     },
                     "english_stop": {
@@ -45,6 +46,7 @@
     },
     "mappings": {
         "properties": {
+            "timestamp": { "type": "date" },
             "approved": { "type": "boolean" },
             "name": { "type": "text", "analyzer": "english", "fields": { "sayt": {"type":"search_as_you_type" } } },
             "credit": {
