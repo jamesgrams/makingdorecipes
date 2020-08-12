@@ -253,7 +253,7 @@ class Search extends React.Component {
         // keep the height while 
         // fade the results if they are shown
         let seed = Math.floor(Math.random()*1000); // set a new randomness seed each time we do a search (note: not when we do infinite scroll to keep pagination)
-        this.setState({"seed": seed, "gettingResults": true, "resultsErrorShown": false, "resultsShown": false, "resultsFaded": this.state.resultsShown, "forcePromptSubscribe": false, "subscribed": false, "subscribing": false, "subscribedError": "", subscriptionUrl: this.getUrl().replace(/resultsShown=(true|false)/,"")}, () => {
+        this.setState({"seed": seed, "gettingResults": true, "resultsErrorShown": false, "resultsShown": false, "resultsFaded": this.state.resultsShown, "forcePromptSubscribe": false, "subscribed": false, "subscribing": false, "subscribedError": "", subscriptionUrl: this.getUrl().replace(/(&|\?)?resultsShown=(true|false)/,"")}, () => {
             this.fetchRecipes(null,null,null,this.state.seed).then( (json) => {
                 this.setState({"gettingResults": false,"resultsFaded":false});
                 this.resultList.current.setState({results: json.recipes, total: json.total, noMoreResults: false, pseudoDataLength: 0}, () => {

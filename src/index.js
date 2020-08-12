@@ -244,10 +244,24 @@ app.delete("/recipe", async function(request, response) {
     }
 } );
 
+// subscribe to emails
 app.post("/subscribe", async function(request, response) {
     console.log( "serving /subscribe" );
     try {
         await subscribe( request.body.email, request.body.path );
+        writeResponse(response, SUCCESS, {});
+    }
+    catch(err) {
+        console.log(err);
+        writeResponse(response, FAILURE, null, HTTP_SEMANTIC_ERROR);
+    }
+});
+
+// unsubscribe from emails
+app.get("/unsubscribe", async function(request, response) {
+    console.log( "serving /unsubscribe" );
+    try {
+        await unsubscribe( request.query.token );
         writeResponse(response, SUCCESS, {});
     }
     catch(err) {
@@ -288,6 +302,7 @@ app.get('*', function(req, res){
 
 // listen
 app.listen(PORT);
+if( !process.env.NODE_ENV === "development" ) sendEmailsAtRightTime();
 
 /**
  * Send a response to the user.
@@ -1112,6 +1127,66 @@ async function subscribe( email, path ) {
 }
 
 /**
+ * Unsubscribe from emails.
+ * @param {string} token - The token containing the optional path and email that we should unsubscribe.
+ * @returns {Promise} - Resolves if true, otherwise false.
+ */
+async function unsubscribe( token ) {
+    try {
+        let result = jwt.verify( token, process.env.TOKEN_KEY, TOKEN_OPTIONS );
+        if( !result.email ) return Promise.reject(BAD_REQUEST);
+
+        let query = {
+            "query": {
+                "bool": {
+                    "must": [
+                        {
+                            "term": {
+                                "email": result.email
+                            }
+                        }
+                    ]
+                }
+            }
+        }
+        if( result.path ) query.query.bool.must.push(
+            {
+                "term": {
+                    "path": result.path
+                }
+            }
+        );
+        console.log(JSON.stringify(query));
+
+        await client.deleteByQuery({
+            "index": ELASTICSEARCH_SUBSCRIPTION_INDEX,
+            "body": query
+        });
+
+        return Promise.resolve();
+    }
+    catch(err) {
+        console.log(err);
+        return Promise.reject(BAD_REQUEST);
+    }
+}
+
+/**
+ * Create Unsubscribe token.
+ * @param {string} email - The email to unsubscribe from.
+ * @param {string} [path] - The path to unsubscribe from.
+ * @returns {string} The signed token.
+ */
+function createUnsubscribeToken( email, path ) {
+    let obj = {
+        email: email
+    };
+    if( path ) obj.path = path;
+    let token = jwt.sign( obj, process.env.TOKEN_KEY, TOKEN_OPTIONS );
+    return token;
+}
+
+/**
  * Login the the administration section.
  * @param {String} username - The attempted username. 
  * @param {String} password - The attempted password.
@@ -1235,7 +1310,7 @@ async function sendEmails() {
                 else state.allergens = state.items;
 
                 let reportTitle = `<h2>New Recipes for ${state.search ? `Query: ${state.search}, ` : ""}${state.items ? (state.safesMode ? "Safes: " : "Allergens: ")+state.items.join(", ")+", " : ""}${state.tags ? `Tags: ${state.tags.join(",")}, ` : ""}${state.flexibility ? `Flexibility: ${state.flexibility}, ` : ""}</h2>`;
-                reportTitle = reportTitle.replace(/\,\s*$/,"");
+                reportTitle = reportTitle.replace(/\,\s*<\/h2>$/,"</h2>");
                 let reportBody = [];
 
                 let recipes = await getRecipes(null, state.search, state.tags, state.safes, state.allergens, state.flexibility, null, null, null, null, null, false);
@@ -1245,11 +1320,11 @@ async function sendEmails() {
                     reportBody.push(`<li><a target="_blank" href="https://makingdorecipes.com/recipe/${recipe.id}">${recipe.name}</a></li>`);
                 }
 
-                reportBody = `<ul>${reportBody.join("")}</ul>`;
+                reportBody = `<ul>${reportBody.join("")}</ul><a href='https://makingdorecipes.com/unsubscribe?token=${createUnsubscribeToken(email, path)}'>Unsubscribe from this search</a>`;
                 reportItems.push(reportTitle + reportBody);
             }
             if( !reportItems.length ) continue; // nothing to report
-            let message = "<h1>New Recipes</h1>We have some new recipes that match the searches you have subscribed to on <a target='_blank' href='https://makingdorecipes.com'>Making Do Recipes</a>." + reportItems.join("");
+            let message = "<h1>New Recipes</h1>We have some new recipes that match the searches you have subscribed to on <a target='_blank' href='https://makingdorecipes.com'>Making Do Recipes</a>." + reportItems.join("") + `<a href='https://makingdorecipes.com/unsubscribe?token=${createUnsubscribeToken(email)}'><br><br>Unsubscribe from all searches</a>`;
             try {
                 smtp.sendMail({
                     from: '"Making Do Recipes" <admin@makingdorecipes.com>',
@@ -1268,6 +1343,18 @@ async function sendEmails() {
     }
 }
 
-/*setInterval( () => {
-    let lastSent = 
-}, 1000*60*20 ); // run every 20 minutes*/
+/**
+ * Send Emails at the right time.
+ */
+sendEmailsAtRightTime = function() {
+    let now = new Date();
+    // send at 3 am
+    var millisTilSend = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 3, 0, 0, 0) - now;
+    if (millisTilSend < 0) {
+        millisTilSend += 86400000; // it's after 10am, try 10am tomorrow.
+    }
+    setTimeout( () => {
+        sendEmails();
+        setTimeout( sendEmailsAtRightTime, 1000 ); // wait a second just to be safe that we don't double send.
+    }, millisTilSend);
+}
