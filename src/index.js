@@ -1156,7 +1156,6 @@ async function unsubscribe( token ) {
                 }
             }
         );
-        console.log(JSON.stringify(query));
 
         await client.deleteByQuery({
             "index": ELASTICSEARCH_SUBSCRIPTION_INDEX,
