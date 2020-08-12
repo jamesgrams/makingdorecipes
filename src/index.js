@@ -1312,7 +1312,7 @@ async function sendEmails() {
                 reportTitle = reportTitle.replace(/\,\s*<\/h2>$/,"</h2>");
                 let reportBody = [];
 
-                let recipes = await getRecipes(null, state.search, state.tags, state.safes, state.allergens, state.flexibility, null, null, null, null, null, false);
+                let recipes = await getRecipes(null, state.search, state.tags, state.safes, state.allergens, state.flexibility, null, null, null, null, null, true);
                 if( !recipes.recipes.length ) continue; // no recipes
 
                 for( let recipe of recipes.recipes ) {
