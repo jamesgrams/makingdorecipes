@@ -17,10 +17,11 @@ const aws = require('aws-sdk');
 const { v1: uuidv1 } = require('uuid');
 const sanitizeHtml = require('sanitize-html');
 const { parse } = require('node-html-parser');
-const compression = require('compression')
+const compression = require('compression');
 
 const PORT=process.env.PORT || 80;
 const ELASTICSEARCH_INDEX = "recipe";
+const ELASTICSEARCH_SUBSCRIPTION_INDEX = "subscription";
 const ELASTICSEARCH_FUZZINESS = "AUTO";
 const RESULTS_SIZE = 10;
 const MAX_SUGGESTIONS = 7;
@@ -240,6 +241,18 @@ app.delete("/recipe", async function(request, response) {
         writeResponse(response, FAILURE, null, HTTP_SEMANTIC_ERROR);
     }
 } );
+
+app.post("/subscribe", async function(request, response) {
+    console.log( "serving /subscribe" );
+    try {
+        await subscribe( request.body.email, request.body.path );
+        writeResponse(response, SUCCESS, {});
+    }
+    catch(err) {
+        console.log(err);
+        writeResponse(response, FAILURE, null, HTTP_SEMANTIC_ERROR);
+    }
+});
 
 // Respond to upload requests for images
 app.get("/sign-s3", (req,res) => {
@@ -1037,6 +1050,28 @@ async function deleteRecipe( id ) {
     });
 
     return Promise.resolve(response.result);
+}
+
+/**
+ * Subscribe to email updates
+ * @param {string} email - The email address to add. 
+ * @param {string} path - The path to look at updates to.
+ */
+async function subscribe( email, path ) {
+
+    if( !errorCheckType(email, "string") ) return Promise.reject(BAD_REQUEST);
+    if( !errorCheckType(path, "string") ) return Promise.reject(BAD_REQUEST);
+    if( !email.match(/(?:[a-z0-9!#$%&'*+/=?^_`{|}~-]+(?:\.[a-z0-9!#$%&'*+/=?^_`{|}~-]+)*|"(?:[\x01-\x08\x0b\x0c\x0e-\x1f\x21\x23-\x5b\x5d-\x7f]|\\[\x01-\x09\x0b\x0c\x0e-\x7f])*")@(?:(?:[a-z0-9](?:[a-z0-9-]*[a-z0-9])?\.)+[a-z0-9](?:[a-z0-9-]*[a-z0-9])?|\[(?:(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.){3}(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?|[a-z0-9-]*[a-z0-9]:(?:[\x01-\x08\x0b\x0c\x0e-\x1f\x21-\x5a\x53-\x7f]|\\[\x01-\x09\x0b\x0c\x0e-\x7f])+)\])/)) return Promise.reject(BAD_REQUEST);
+
+    await client.index({
+        index: ELASTICSEARCH_SUBSCRIPTION_INDEX,
+        body: {
+            email: email,
+            path: path
+        }
+    });
+
+    return Promise.resolve();
 }
 
 /**

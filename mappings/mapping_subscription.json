@@ -1,0 +1,8 @@
+{
+    "mappings": {
+        "properties": {
+            "path": { "type": "keyword" },
+            "email": { "type": "keyword" }
+        }
+    }
+}

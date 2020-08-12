@@ -19,6 +19,7 @@ import Instructions from './Instructions';
 
 const SAFES_TITLE = "Match recipes containing only the listed items";
 const ALLERGENS_TITLE = "Match recipes that don't contain the listed items";
+const COULD_NOT_SUBSCRIBE = "Could not subscribe.";
 
 /**
  * The search form and results.
@@ -42,7 +43,13 @@ class Search extends React.Component {
             "recipeSuggestions": [],
             "seed": 0,
             "currentQuery": window.location.pathname === "/" ? window.location.search : "",
-            "isAdmin": cookie.load("making-do-recipes-token") ? true : false
+            "isAdmin": cookie.load("making-do-recipes-token") ? true : false,
+            "forcePromptSubscribe": false,
+            "subscribed": false,
+            "subscribedError": "",
+            "subscribing": false,
+            "subscriptionEmail": "",
+            "subscriptionUrl": ""
         }
         this.state = {...this.state, ...this.getStateFromParams()};
 
@@ -78,6 +85,7 @@ class Search extends React.Component {
         this.setUrl = this.setUrl.bind(this);
         this.fetchRecipes = this.fetchRecipes.bind(this);
         this.getStateFromParams = this.getStateFromParams.bind(this);
+        this.subscribeEmail = this.subscribeEmail.bind(this);
     }
 
     /**
@@ -245,13 +253,12 @@ class Search extends React.Component {
         // keep the height while 
         // fade the results if they are shown
         let seed = Math.floor(Math.random()*1000); // set a new randomness seed each time we do a search (note: not when we do infinite scroll to keep pagination)
-        this.setState({"seed": seed, "gettingResults": true, "resultsErrorShown": false, "resultsShown": false, "resultsFaded": this.state.resultsShown}, () => {
-
+        this.setState({"seed": seed, "gettingResults": true, "resultsErrorShown": false, "resultsShown": false, "resultsFaded": this.state.resultsShown, "forcePromptSubscribe": false, "subscribed": false, "subscribing": false, "subscribedError": "", subscriptionUrl: this.getUrl()}, () => {
             this.fetchRecipes(null,null,null,this.state.seed).then( (json) => {
                 this.setState({"gettingResults": false,"resultsFaded":false});
                 this.resultList.current.setState({results: json.recipes, total: json.total, noMoreResults: false, pseudoDataLength: 0}, () => {
                     if( json.recipes.length ) this.setState({resultsShown: true}, () => {if(!noUrl)this.setUrl()});
-                    else this.setState({resultsError: "No recipes found.", resultsErrorShown: true, "resultsShown": false}, () => {if(!noUrl)this.setUrl()});
+                    else this.setState({resultsError: "No recipes found.", resultsErrorShown: true, "resultsShown": false, forcePromptSubscribe: true}, () => {if(!noUrl)this.setUrl()});
                 });
             } ).catch(err => {
                 this.setState({"gettingResults": false,"resultsFaded":false});
@@ -298,6 +305,41 @@ class Search extends React.Component {
                 }}
             />
         )
+    }
+
+    /**
+     * Subscribe to a search result to get emails.
+     * @param {Event} e - The click event.
+     */
+    subscribeEmail(e) {
+        if( e ) {
+            e.stopPropagation();
+            e.preventDefault();
+        }
+        this.setState({"subscribing": true}, () => {
+            fetch("/subscribe", { 
+                method: 'POST', 
+                body: JSON.stringify({
+                    email: this.state.subscriptionEmail,
+                    path: this.state.subscriptionUrl // If there are no results, we don't have a url to go off of, so we can't use window.location.search
+                }), 
+                headers: {'Content-Type': 'application/json'} 
+            }).then(
+                response => response.json().then( data => {
+                    if( data.status === "success" ) {
+                        this.setState({"subscribed": true, "subscribedError": false, "subscribing": false});
+                    }
+                    else {
+                        this.setState({"subscribedError": COULD_NOT_SUBSCRIBE, "subscribing": false});
+                    }
+                })
+                .catch(err => {
+                    this.setState({"subscribedError": COULD_NOT_SUBSCRIBE, "subscribing": false});
+                })
+            ).catch(err => {
+                this.setState({"subscribedError": COULD_NOT_SUBSCRIBE, "subscribing": false});
+            });
+        });
     }
 
     /**
@@ -430,6 +472,14 @@ class Search extends React.Component {
             </div>
             <div className={"SearchResultsError " + (this.state.resultsErrorShown ? "" : "hidden")}>
                 {this.state.resultsError}
+            </div>
+            <div className={"SearchResultsSubscribe " + (this.state.resultsShown || this.state.resultsFaded || this.state.forcePromptSubscribe ? "" : "hidden")}>
+                <label for="subscriptionEmail">
+                    <span className="SearchResultsSubscribeInfo">Get alerts for new recipes that match this search</span>
+                    <input placeholder="Email" onChange={this.handleChange} type="email" name="subscriptionEmail" id="subscriptionEmail" value={this.state.subscriptionEmail}/>
+                        <button className={this.state.subscribed ? "subscribed" : ""} onClick={(e) => {this.subscribeEmail(e)}} disabled={(!this.state.subscriptionEmail || this.state.subscribing || this.state.subscribed) ? "disabled" : ""}>Subscribe{this.state.subscribed ? "d" : ""}</button>
+                    <span className={"SubscribeEmailError " + (this.state.subscribedError ? "" : "hidden")}>{this.state.subscribedError}</span>
+                </label>
             </div>
             <Route exact path="/" render={() => {}}></Route>
             <Link to="/add" className="SearchAddLink">

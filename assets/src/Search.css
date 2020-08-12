@@ -76,8 +76,58 @@
     font-size: 200%;
 }
 
+.SearchResultsSubscribe {
+    max-width: 500px;
+    margin: auto;
+}
+
+.SearchResultsSubscribe label {
+    flex-wrap: wrap;
+}
+
+.SearchResultsSubscribe span {
+    display: block;
+    margin-bottom: 10px;
+    width: 100%;
+    text-align: center;
+}
+
+.SearchResultsSubscribe input {
+    flex-grow: 0;
+    margin-left: 0 !important;
+    width: initial !important;
+    flex-grow: 1;
+}
+
+.SearchResultsSubscribe button {
+    margin-left: 10px;
+    cursor: pointer;
+}
+
+.SearchResultsSubscribe button.subscribed {
+    background-color: green;
+}
+
+.SearchResultsSubscribe .SubscribeEmailError {
+    color: red;
+    margin-top: 10px;
+    margin-bottom: 0;
+}
+
 @media only screen and (max-width: 382px) {
     .SearchForm .SearchLabelRadio {
         display: inline-block;
+    }
+}
+
+@media only screen and (max-width: 440px) {
+    .SearchResultsSubscribe input {
+        width: 100% !important;
+    }
+    .SearchResultsSubscribe button {
+        margin: 0px;
+        margin-top: 10px;
+        margin-left: auto;
+        margin-right: auto;
     }
 }
