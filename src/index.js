@@ -939,7 +939,7 @@ async function generateSlug( name ) {
         if( count > 1 ) {
             slug = slugBase + "-" + count;
         }
-        let recipes = await getRecipes( slug );
+        let recipes = await getRecipes( slug, null, null, null, null, null, null, null, true );
         recipes = recipes.recipes; // ignore hits
         if( recipes.length ) {
             count++;
@@ -1020,7 +1020,7 @@ async function indexRecipe( id, name, tag, steps, approved, ingredient, credit )
         id = await generateSlug(name);
     }
     else {
-        let currentRecipes = await getRecipes(id);
+        let currentRecipes = await getRecipes(id,null,null,null,null,null,null,true);
         if( currentRecipes && currentRecipes[0] && !currentRecipes[0].approved ) {
             timestamp = new Date().getTime(); // The first time the recipe is being approved, we set its date - used for fetching emails
         }
