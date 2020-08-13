@@ -74,6 +74,7 @@ class Search extends React.Component {
         this.overrideAddMaskWarning = false;
 
         this.resultList = React.createRef();
+        this.subscribeFormRef = React.createRef();
 
         let possItems = ["Sugar Cookies","Fudge Pops","Pancakes","Peanut Butter Cookies","Old Fashioned Donuts","Chicken Fingers","Blueberry Donuts"];
         this.searchPlaceholder = possItems[Math.floor(Math.random()*possItems.length)];
@@ -317,6 +318,7 @@ class Search extends React.Component {
             e.preventDefault();
         }
         if(this.state.resultsFaded) return; // don't allow submit while faded (only place while still visible that we don't want submit)
+        if( !this.subscribeFormRef.current.reportValidity() ) return;
         this.setState({"subscribing": true}, () => {
             fetch("/subscribe", { 
                 method: 'POST', 
@@ -474,7 +476,7 @@ class Search extends React.Component {
             <div className={"SearchResultsError " + (this.state.resultsErrorShown ? "" : "hidden")}>
                 {this.state.resultsError}
             </div>
-            <form className={"SearchResultsSubscribe " + (this.state.resultsShown || this.state.resultsFaded || this.state.forcePromptSubscribe ? "" : "hidden")}>
+            <form ref={this.subscribeFormRef} className={"SearchResultsSubscribe " + (this.state.resultsShown || this.state.resultsFaded || this.state.forcePromptSubscribe ? "" : "hidden")}>
                 <label for="subscriptionEmail">
                     <span className="SearchResultsSubscribeInfo">Get alerts for new recipes that match this search</span>
                     <input placeholder="Email" onChange={this.handleChange} type="email" name="subscriptionEmail" id="subscriptionEmail" value={this.state.subscriptionEmail}/>
