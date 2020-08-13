@@ -479,7 +479,7 @@ class Search extends React.Component {
             <form ref={this.subscribeFormRef} className={"SearchResultsSubscribe " + (this.state.resultsShown || this.state.resultsFaded || this.state.forcePromptSubscribe ? "" : "hidden")}>
                 <label for="subscriptionEmail">
                     <span className="SearchResultsSubscribeInfo">Get alerts for new recipes that match this search</span>
-                    <input placeholder="Email" onChange={this.handleChange} type="email" name="subscriptionEmail" id="subscriptionEmail" value={this.state.subscriptionEmail}/>
+                    <input placeholder="Email" required onChange={this.handleChange} type="email" name="subscriptionEmail" id="subscriptionEmail" value={this.state.subscriptionEmail}/>
                         <button className={this.state.subscribed ? "subscribed" : ""} onClick={(e) => {this.subscribeEmail(e)}} disabled={(this.state.subscribing || this.state.subscribed) ? "disabled" : ""}>Subscribe{this.state.subscribed ? "d" : ""}</button>
                     <span className={"SubscribeEmailError " + (this.state.subscribedError ? "" : "hidden")}>{this.state.subscribedError}</span>
                 </label>
