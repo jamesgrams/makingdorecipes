@@ -349,7 +349,7 @@ class Search extends React.Component {
      * Render this component.
      */
     render() {
-        let metaTitle = "FPIES, MCAS, EoE, Allergy Recipe Finder: Making Do Recipes"; // These should match what we set initially in index.html
+        let metaTitle = "Making Do Recipes: FPIES, MCAS, EoE, Allergy Recipe Finder"; // These should match what we set initially in index.html
         let metaDescription = "Use our in-depth recipe finder to search by safe ingredients or allergens. Discover delicious delights that you or your child can enjoy regardless of complex allergies.";
 
         return <div className="Search">
