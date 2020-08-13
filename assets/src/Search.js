@@ -316,6 +316,7 @@ class Search extends React.Component {
             e.stopPropagation();
             e.preventDefault();
         }
+        if(this.state.resultsFaded) return; // don't allow submit while faded (only place while still visible that we don't want submit)
         this.setState({"subscribing": true}, () => {
             fetch("/subscribe", { 
                 method: 'POST', 
@@ -473,14 +474,14 @@ class Search extends React.Component {
             <div className={"SearchResultsError " + (this.state.resultsErrorShown ? "" : "hidden")}>
                 {this.state.resultsError}
             </div>
-            <div className={"SearchResultsSubscribe " + (this.state.resultsShown || this.state.resultsFaded || this.state.forcePromptSubscribe ? "" : "hidden")}>
+            <form className={"SearchResultsSubscribe " + (this.state.resultsShown || this.state.resultsFaded || this.state.forcePromptSubscribe ? "" : "hidden")}>
                 <label for="subscriptionEmail">
                     <span className="SearchResultsSubscribeInfo">Get alerts for new recipes that match this search</span>
                     <input placeholder="Email" onChange={this.handleChange} type="email" name="subscriptionEmail" id="subscriptionEmail" value={this.state.subscriptionEmail}/>
                         <button className={this.state.subscribed ? "subscribed" : ""} onClick={(e) => {this.subscribeEmail(e)}} disabled={(!this.state.subscriptionEmail || this.state.subscribing || this.state.subscribed) ? "disabled" : ""}>Subscribe{this.state.subscribed ? "d" : ""}</button>
                     <span className={"SubscribeEmailError " + (this.state.subscribedError ? "" : "hidden")}>{this.state.subscribedError}</span>
                 </label>
-            </div>
+            </form>
             <Route exact path="/" render={() => {}}></Route>
             <Link to="/add" className="SearchAddLink">
                 +

@@ -1244,102 +1244,106 @@ async function sendEmails() {
 
     if( !process.env.MAILER_HOST ) return;
 
-    let smtp = nodemailer.createTransport({
-        host: process.env.MAILER_HOST,
-        port: process.env.MAILER_PORT,
-        secure: false,
-        auth: {
-            user: process.env.MAILER_EMAIL,
-            pass: process.env.MAILER_PASSWORD
-        }
-    });
-    
-    let afterKey = "";
-    while( true ) {
+    try {
 
-        let body = {
-            "size": 0,
-            "aggs": {
-                "email_buckets": {
-                    "composite": {
-                        "size": 100,
-                        "sources": [
-                            { "subscription": { "terms": { "field": "email" } } }
-                        ]
-                    },
-                    "aggs": {
-                        // This filters out duplicates paths
-                        // We will send only 20 paths per user, so we don't need pagination
-                        // we should have all we need from these two aggregates, we don't need to do top hits
-                        "path_buckets": {
-                            "terms": {
-                                "size": 20,
-                                "field": "path"
+        let smtp = nodemailer.createTransport({
+            host: process.env.MAILER_HOST,
+            port: process.env.MAILER_PORT,
+            secure: false,
+            auth: {
+                user: process.env.MAILER_EMAIL,
+                pass: process.env.MAILER_PASSWORD
+            }
+        });
+        
+        let afterKey = "";
+        while( true ) {
+
+            let body = {
+                "size": 0,
+                "aggs": {
+                    "email_buckets": {
+                        "composite": {
+                            "size": 100,
+                            "sources": [
+                                { "subscription": { "terms": { "field": "email" } } }
+                            ]
+                        },
+                        "aggs": {
+                            // This filters out duplicates paths
+                            // We will send only 20 paths per user, so we don't need pagination
+                            // we should have all we need from these two aggregates, we don't need to do top hits
+                            "path_buckets": {
+                                "terms": {
+                                    "size": 20,
+                                    "field": "path"
+                                }
                             }
                         }
                     }
                 }
             }
-        }
-        if( afterKey ) body.aggs.email_buckets.composite.after = afterKey;
+            if( afterKey ) body.aggs.email_buckets.composite.after = afterKey;
 
-        let response = await client.search({
-            index: ELASTICSEARCH_SUBSCRIPTION_INDEX,
-            body: body
-        });
+            let response = await client.search({
+                index: ELASTICSEARCH_SUBSCRIPTION_INDEX,
+                body: body
+            });
 
-        // send the emails
-        for( let emailBucket of response.aggregations.email_buckets.buckets ) {
-            let email = emailBucket.key.subscription;
-            let reportItems = [];
-            for( let pathBucket of emailBucket.path_buckets.buckets ) {
-                let path = pathBucket.key;
+            // send the emails
+            for( let emailBucket of response.aggregations.email_buckets.buckets ) {
+                let email = emailBucket.key.subscription;
+                let reportItems = [];
+                for( let pathBucket of emailBucket.path_buckets.buckets ) {
+                    let path = pathBucket.key;
 
-                // get the items
-                let params = new URLSearchParams(path);
-                // these come from the getStateFromParams and fetchRecipes method in the frontend code.
-                let state = {
-                    "search": params.get("search") || null,
-                    "items": params.get("items") ? params.get("items").split(",") : null,
-                    "safesMode": params.get("safesMode") === "false" ? false : true,
-                    "tags": params.get("tags") ? params.get("tags").split(",") : null,
-                    "flexibility": params.get("flexibility") || 0 // these first five are for the form
-                };
-                if( state.safesMode ) state.safes = state.items;
-                else state.allergens = state.items;
+                    // get the items
+                    let params = new URLSearchParams(path);
+                    // these come from the getStateFromParams and fetchRecipes method in the frontend code.
+                    let state = {
+                        "search": params.get("search") || null,
+                        "items": params.get("items") ? params.get("items").split(",") : null,
+                        "safesMode": params.get("safesMode") === "false" ? false : true,
+                        "tags": params.get("tags") ? params.get("tags").split(",") : null,
+                        "flexibility": params.get("flexibility") || 0 // these first five are for the form
+                    };
+                    if( state.safesMode ) state.safes = state.items;
+                    else state.allergens = state.items;
 
-                let reportTitle = `<h2>New Recipes for ${state.search ? `Query: ${state.search}, ` : ""}${state.items ? (state.safesMode ? "Safes: " : "Allergens: ")+state.items.join(", ")+", " : ""}${state.tags ? `Tags: ${state.tags.join(",")}, ` : ""}${state.flexibility ? `Flexibility: ${state.flexibility}, ` : ""}</h2>`;
-                reportTitle = reportTitle.replace(/\,\s*<\/h2>$/,"</h2>");
-                let reportBody = [];
+                    let reportTitle = `<h2>New Recipes for ${state.search ? `Query: ${state.search}, ` : ""}${state.items ? (state.safesMode ? "Safes: " : "Allergens: ")+state.items.join(", ")+", " : ""}${state.tags ? `Tags: ${state.tags.join(",")}, ` : ""}${state.flexibility ? `Flexibility: ${state.flexibility}, ` : ""}</h2>`;
+                    reportTitle = reportTitle.replace(/\,\s*<\/h2>$/,"</h2>");
+                    let reportBody = [];
 
-                let recipes = await getRecipes(null, state.search, state.tags, state.safes, state.allergens, state.flexibility, null, null, null, null, null, true);
-                if( !recipes.recipes.length ) continue; // no recipes
+                    let recipes = await getRecipes(null, state.search, state.tags, state.safes, state.allergens, state.flexibility, null, null, null, null, null, true);
+                    if( !recipes.recipes.length ) continue; // no recipes
 
-                for( let recipe of recipes.recipes ) {
-                    reportBody.push(`<li><a target="_blank" href="https://makingdorecipes.com/recipe/${recipe.id}">${recipe.name}</a></li>`);
+                    for( let recipe of recipes.recipes ) {
+                        reportBody.push(`<li><a target="_blank" href="https://makingdorecipes.com/recipe/${recipe.id}">${recipe.name}</a></li>`);
+                    }
+
+                    reportBody = `<ul>${reportBody.join("")}</ul><a href='https://makingdorecipes.com/unsubscribe?token=${createUnsubscribeToken(email, path)}'>Unsubscribe from this search</a>`;
+                    reportItems.push(reportTitle + reportBody);
                 }
+                if( !reportItems.length ) continue; // nothing to report
+                let message = "<h1>New Recipes</h1>We have some new recipes that match the searches you have subscribed to on <a target='_blank' href='https://makingdorecipes.com'>Making Do Recipes</a>." + reportItems.join("") + `<a href='https://makingdorecipes.com/unsubscribe?token=${createUnsubscribeToken(email)}'><br><br>Unsubscribe from all searches</a>`;
+                try {
+                    smtp.sendMail({
+                        from: '"Making Do Recipes" <admin@makingdorecipes.com>',
+                        to: email,
+                        subject: "New Recipes for You - " + new Date().toLocaleDateString(),
+                        html: message
+                    })
+                }
+                catch(err) {
+                    console.log(err); // should be ok
+                }
+            }
 
-                reportBody = `<ul>${reportBody.join("")}</ul><a href='https://makingdorecipes.com/unsubscribe?token=${createUnsubscribeToken(email, path)}'>Unsubscribe from this search</a>`;
-                reportItems.push(reportTitle + reportBody);
-            }
-            if( !reportItems.length ) continue; // nothing to report
-            let message = "<h1>New Recipes</h1>We have some new recipes that match the searches you have subscribed to on <a target='_blank' href='https://makingdorecipes.com'>Making Do Recipes</a>." + reportItems.join("") + `<a href='https://makingdorecipes.com/unsubscribe?token=${createUnsubscribeToken(email)}'><br><br>Unsubscribe from all searches</a>`;
-            try {
-                smtp.sendMail({
-                    from: '"Making Do Recipes" <admin@makingdorecipes.com>',
-                    to: email,
-                    subject: "New Recipes for You - " + new Date().toLocaleDateString(),
-                    html: message
-                })
-            }
-            catch(err) {
-                console.log(err); // should be ok
-            }
+            afterKey = response.aggregations.email_buckets.after_key;
+            if( !afterKey ) break; // no more items to fetch
         }
-
-        afterKey = response.aggregations.email_buckets.after_key;
-        if( !afterKey ) break; // no more items to fetch
     }
+    catch(err) {}
 }
 
 /**

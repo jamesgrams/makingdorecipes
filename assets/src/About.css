@@ -4,3 +4,9 @@
     float: left;
     margin: 0 20px 20px 0;
 }
+
+@media only screen and (min-width: 1778px) {
+    .About img {
+        margin-bottom: 40px;
+    }
+}
