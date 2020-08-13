@@ -162,3 +162,8 @@ footer {
 footer > a {
     color: grey;
 }
+
+.loading { 
+    color: grey;
+    text-align: center;
+}

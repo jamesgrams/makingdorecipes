@@ -1,21 +1,21 @@
-import React from 'react';
+import React, { lazy, Suspense } from 'react';
 import './Search.css';
-///import 'react-tagsinput/react-tagsinput.css';
-import ResultList from "./ResultList.js";
-import TagsInput from 'react-tagsinput';
-import Autosuggest from 'react-autosuggest'
+import cookie from 'react-cookies';
+import Helmet from 'react-helmet';
 import {
     Link,
     Route,
     withRouter
 } from "react-router-dom";
+///import 'react-tagsinput/react-tagsinput.css';
+import TagsInput from 'react-tagsinput';
+import Autosuggest from 'react-autosuggest'
 import Modal from './Modal';
-import Submit from "./Submit";
-import cookie from 'react-cookies';
-import Helmet from 'react-helmet';
-import Disclaimer from './Disclaimer.js';
-import About from './About';
-import Instructions from './Instructions';
+import ResultList from "./ResultList";
+const Submit = lazy(() => import('./Submit'));
+const About = lazy(() => import('./About'));
+const Instructions = lazy(() => import('./Instructions'));
+const Disclaimer = lazy(() => import('./Disclaimer'));
 
 const SAFES_TITLE = "Match recipes containing only the listed items";
 const ALLERGENS_TITLE = "Match recipes that don't contain the listed items";
@@ -351,6 +351,7 @@ class Search extends React.Component {
     render() {
         let metaTitle = "Making Do Recipes: FPIES, MCAS, EoE, Allergy Recipe Finder"; // These should match what we set initially in index.html
         let metaDescription = "Use our in-depth recipe finder to search by safe ingredients or allergens. Discover delicious delights that you or your child can enjoy regardless of complex allergies.";
+        let loading = () => <div className="loading">Loading...</div>;
 
         return <div className="Search">
             <Helmet>
@@ -488,15 +489,15 @@ class Search extends React.Component {
             <Link to="/add" className="SearchAddLink">
                 +
             </Link>
-            <Route path="/add" render={() => <Modal query={this.state.currentQuery} className="SubmitModalContent" content={<Submit setOverrideAddMaskWarning={(set) => this.overrideAddMaskWarning = set} autocompleteTagInput={this.autocompleteTagInput}></Submit>} onclick={(e) => {
+            <Route path="/add" render={() => <Modal query={this.state.currentQuery} className="SubmitModalContent" content={<Suspense fallback={loading()}><Submit setOverrideAddMaskWarning={(set) => this.overrideAddMaskWarning = set} autocompleteTagInput={this.autocompleteTagInput}></Submit></Suspense>} onclick={(e) => {
                 if( !this.overrideAddMaskWarning && !window.confirm("Are you sure you want to close this form?") ) {
                     e.preventDefault();
                     e.stopPropagation();
                 }
             }}></Modal>}/>
-            <Route path="/disclaimer" render={() => <Modal query={this.state.currentQuery} content={<Disclaimer></Disclaimer>}></Modal>}></Route>
-            <Route path="/about" render={() => <Modal query={this.state.currentQuery} content={<About></About>}></Modal>}></Route>
-            <Route path="/instructions" render={() => <Modal query={this.state.currentQuery} content={<Instructions></Instructions>}></Modal>}></Route>
+            <Route path="/disclaimer" render={() => <Modal query={this.state.currentQuery} content={<Suspense fallback={loading()}><Disclaimer></Disclaimer></Suspense>}></Modal>}></Route>
+            <Route path="/about" render={() => <Modal query={this.state.currentQuery} content={<Suspense fallback={loading()}><About></About></Suspense>}></Modal>}></Route>
+            <Route path="/instructions" render={() => <Modal query={this.state.currentQuery} content={<Suspense fallback={loading()}><Instructions></Instructions></Suspense>}></Modal>}></Route>
         </div>
     }
 }
