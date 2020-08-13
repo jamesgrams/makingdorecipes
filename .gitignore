@@ -3,6 +3,8 @@ node_modules/*
 npm-debug.log
 .env
 
+/assets/public/sitemap.xml
+
 # dependencies
 /assets/node_modules
 /assets/.pnp

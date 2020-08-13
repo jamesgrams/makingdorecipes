@@ -19,6 +19,7 @@ const sanitizeHtml = require('sanitize-html');
 const { parse } = require('node-html-parser');
 const compression = require('compression');
 const nodemailer = require('nodemailer');
+const jsontoxml = require('jsontoxml');
 
 const PORT=process.env.PORT || 80;
 const ELASTICSEARCH_INDEX = "recipe";
@@ -87,6 +88,7 @@ app.use("/add", express.static("assets/build/index.html"));
 app.use("/disclaimer", express.static("assets/build/index.html"));
 app.use("/about", express.static("assets/build/index.html"));
 app.use("/instructions", express.static("assets/build/index.html"));
+// be sure to add these to the sitemap generator function as well
 
 // For the Facebook Crawler, we can't set og tags dynamically with React Helmet
 // So we need to inject them
@@ -303,6 +305,7 @@ app.get('*', function(req, res){
 // listen
 app.listen(PORT);
 if( !process.env.NODE_ENV === "development" ) sendEmailsAtRightTime();
+generateSitemap();
 
 /**
  * Send a response to the user.
@@ -1358,6 +1361,68 @@ sendEmailsAtRightTime = function() {
     }
     setTimeout( () => {
         sendEmails();
+        setTimeout( generateSitemap, 3600000 ); // generate the sitemap an hour later
         setTimeout( sendEmailsAtRightTime, 1000 ); // wait a second just to be safe that we don't double send.
     }, millisTilSend);
+}
+
+// Generate sitemap
+async function generateSitemap() {
+
+    try {
+
+        let sitemap = [{
+            name: "urlset",
+            attrs: {
+                xmlns: "http://www.sitemaps.org/schemas/sitemap/0.9"
+            },
+            children: [
+                {
+                    url: {
+                        loc: "https://makingdorecipes.com"
+                    }
+                },
+                {
+                    url: {
+                        loc: "https://makingdorecipes.com/add"
+                    }
+                },
+                {
+                    url: {
+                        loc: "https://makingdorecipes.com/about"
+                    }
+                },
+                {
+                    url: {
+                        loc: "https://makingdorecipes.com/disclaimer"
+                    }
+                },
+                {
+                    url: {
+                        loc: "https://makingdorecipes.com/instructions"
+                    }
+                }
+            ]
+        }];
+
+        let from = 0;
+        while( true ) {
+            let recipes = await getRecipes(null,null,null,null,null,null,null,null,null,from);
+            if( !recipes.recipes.length ) break;
+            from += recipes.recipes.length;
+            for( let recipe of recipes.recipes ) {
+                sitemap[0].children.push({
+                    url: {
+                        loc: "https://makingdorecipes.com/recipe/" + recipe.id
+                    }
+                });
+            }
+        }
+
+        fs.writeFileSync("assets/build/sitemap.xml", jsontoxml(sitemap, {xmlHeader: true}));
+
+    }
+    catch(err) {
+        console.log(err);
+    }
 }
