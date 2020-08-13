@@ -20,7 +20,7 @@ class About extends React.Component {
     render() {
 
         let metaTitle = "About - Making Do Recipes";
-        let metaDescription = "Making Do Recipes aims to help people with restrictive allergies find recipes. Come hear our story.";
+        let metaDescription = "Making Do Recipes aims to help people with restrictive allergies including FPIES, MCAS, and EoE to find recipes. Come hear our story.";
 
         return <div className="About">
             <Helmet>

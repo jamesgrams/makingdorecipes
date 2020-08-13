@@ -19,7 +19,7 @@ class Disclaimer extends React.Component {
     render() {
 
         let metaTitle = "Disclaimer - Making Do Recipes";
-        let metaDescription = "Making Do Recipes Disclaimer.";
+        let metaDescription = "Making Do Recipes liability disclaimer.";
 
         return <div className="Disclaimer">
             <Helmet>

@@ -19,7 +19,7 @@ class Instructions extends React.Component {
     render() {
 
         let metaTitle = "Instructions - Making Do Recipes";
-        let metaDescription = "Making Do Recipes Instructions.";
+        let metaDescription = "Instructions on how to use the search on Making Do Recipes to find Recipes by providing lists of safes or allergens, tags, keywords, and flexibility (the number of ingredients that can be allergens).";
 
         return <div className="Instructions">
             <Helmet>
