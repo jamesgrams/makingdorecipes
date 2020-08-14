@@ -11,7 +11,7 @@ class App extends React.Component {
             <div className="App">
                 <header>
                     <picture>
-                        <source srcset="/logo-small.png" type="image/webp"/>
+                        <source srcset="/logo-small.webp" type="image/webp"/>
                         <source srcset="/logo-small.png" type="image/png"/> 
                         <img alt="Making Do Recipes Logo" src="/logo-small.png"/>
                     </picture>
