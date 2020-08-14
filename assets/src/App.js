@@ -10,7 +10,11 @@ class App extends React.Component {
             <Analytics></Analytics>
             <div className="App">
                 <header>
-                    <img src="/logo.png" alt="Making Do Recipes Logo"></img>
+                    <picture>
+                        <source srcset="/logo-small.png" type="image/webp"/>
+                        <source srcset="/logo-small.png" type="image/png"/> 
+                        <img alt="Making Do Recipes Logo" src="/logo-small.png"/>
+                    </picture>
                 </header>
                 <main>
                     <Search></Search>
