@@ -1024,7 +1024,7 @@ async function indexRecipe( id, name, tag, steps, approved, ingredient, credit )
     }
     else {
         let currentRecipes = await getRecipes(id,null,null,null,null,null,null,true);
-        if( currentRecipes && currentRecipes[0] && !currentRecipes[0].approved ) {
+        if( currentRecipes && currentRecipes.recipes && currentRecipes.recipes[0] && !currentRecipes.recipes[0].approved ) {
             timestamp = new Date().getTime(); // The first time the recipe is being approved, we set its date - used for fetching emails
         }
     }
