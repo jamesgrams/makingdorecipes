@@ -376,8 +376,8 @@ async function getRecipes( id, search, tags, safes, allergens, flexibility=0, pr
         searchParts.push({
             "range": {
                 "timestamp": {
-                    "gte": "now-1d/d",
-                    "lt": "now/d"
+                    "gte": "now-1d",
+                    "lt": "now"
                 }
             }
         });
@@ -1315,6 +1315,7 @@ async function sendEmails() {
 
                     let reportTitle = `<h2>New Recipes for ${state.search ? `Query: ${state.search}, ` : ""}${state.items ? (state.safesMode ? "Safes: " : "Allergens: ")+state.items.join(", ")+", " : ""}${state.tags ? `Tags: ${state.tags.join(",")}, ` : ""}${state.flexibility ? `Flexibility: ${state.flexibility}, ` : ""}</h2>`;
                     reportTitle = reportTitle.replace(/\,\s*<\/h2>$/,"</h2>");
+                    reportTitle = reportTitle.replace(/for\s?<\/h2>$/," (All)</h2>");
                     let reportBody = [];
 
                     let recipes = await getRecipes(null, state.search, state.tags, state.safes, state.allergens, state.flexibility, null, null, null, null, null, true);
@@ -1354,8 +1355,8 @@ async function sendEmails() {
  */
 sendEmailsAtRightTime = function() {
     let now = new Date();
-    // send at 3 am
-    var millisTilSend = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 3, 0, 0, 0) - now;
+    // send at 7:20 am
+    var millisTilSend = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 7, 20, 0, 0) - now;
     if (millisTilSend < 0) {
         millisTilSend += 86400000; // it's after 10am, try 10am tomorrow.
     }
