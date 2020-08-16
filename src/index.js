@@ -1355,12 +1355,14 @@ async function sendEmails() {
  */
 sendEmailsAtRightTime = function() {
     let now = new Date();
+    console.log(now);
     // send at 7:20 am
-    var millisTilSend = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 7, 20, 0, 0) - now;
+    var millisTilSend = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 11, 20, 0, 0) - now;
     if (millisTilSend < 0) {
         millisTilSend += 86400000; // it's after 10am, try 10am tomorrow.
     }
     setTimeout( () => {
+        console.log("sending emails");
         sendEmails();
         setTimeout( generateSitemap, 3600000 ); // generate the sitemap an hour later
         setTimeout( sendEmailsAtRightTime, 1000 ); // wait a second just to be safe that we don't double send.
