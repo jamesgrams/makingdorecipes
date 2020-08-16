@@ -304,7 +304,7 @@ app.get('*', function(req, res){
 
 // listen
 app.listen(PORT);
-if( !process.env.NODE_ENV === "development" ) sendEmailsAtRightTime();
+if( process.env.NODE_ENV !== "development" ) sendEmailsAtRightTime();
 generateSitemap();
 
 /**
@@ -1353,11 +1353,10 @@ async function sendEmails() {
 /**
  * Send Emails at the right time.
  */
-sendEmailsAtRightTime = function() {
+function sendEmailsAtRightTime() {
     let now = new Date();
-    console.log(now);
-    // send at 7:20 am
-    var millisTilSend = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 11, 20, 0, 0) - now;
+    // send at 7:30 am
+    var millisTilSend = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 11, 30, 0, 0) - now;
     if (millisTilSend < 0) {
         millisTilSend += 86400000; // it's after 10am, try 10am tomorrow.
     }
