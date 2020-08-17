@@ -398,7 +398,7 @@ class Search extends React.Component {
                         </Autosuggest>
                     </label>
                 </div>
-                <div className="SearchRow">
+                <div className="SearchRow SearchRowItemsRow">
                     <div className="SearchColumn">
                         <label className="SearchLabelRadio" title={SAFES_TITLE}>
                             <span>Safes:</span>
@@ -430,7 +430,7 @@ class Search extends React.Component {
                             onChange={(tags) => this.setState({items: tags})} />
                     </label>
                 </div>
-                <div className={"SearchRow " + (this.state.moreShown ? "" : "hidden")}>
+                <div className={"SearchRow SearchRowTagsRow " + (this.state.moreShown ? "" : "hidden")}>
                     <label title="Filter recipes by tags">
                         <span className="SearchLabelText">Tags:</span>
                         <TagsInput
