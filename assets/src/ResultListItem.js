@@ -80,6 +80,21 @@ class ResultListItem extends React.Component {
         let metaDescription = this.props.steps.replace(/<[^>]+>/g, '').replace(/\r?\n|\r/g," ").replace(/\s{2,}/," ").trim();
         let helmet = "";
         if( this.isModal ) {
+
+            // schema should only be needed for search engines which should run javascript
+            let schema =  JSON.stringify(
+                {
+                    "@context": "https://schema.org",
+                    "@type": "Recipe",
+                    "name": this.props.name,
+                    "author": this.props.schemaCredits,
+                    "recipeIngredient": this.props.schemaIngredients,
+                    "recipeInstructions": this.props.schemaSteps,
+                    "image": this.props.schemaImages,
+                    "keywords": this.props.schemaTags
+                }
+            );
+
             helmet = <Helmet>
                 <title>{metaTitle}</title>
                 <meta
@@ -92,6 +107,7 @@ class ResultListItem extends React.Component {
                 <meta propery="og:description" content={metaDescription}/>
                 <meta property="twitter:title" content={metaTitle}/>
                 <meta propery="twitter:description" content={metaDescription}/>
+                <script type="application/ld+json">{schema}</script>
             </Helmet>
         }
         return <HtmlTag className="ResultListItem">

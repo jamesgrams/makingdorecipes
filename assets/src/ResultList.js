@@ -70,7 +70,7 @@ class ResultList extends React.Component {
         }
 
         listItem = listItem.props.children;
-        let popout = <ResultListItem isModal={true} id={listItem.props.id} name={listItem.props.name} tags={listItem.props.tags} ingredients={listItem.props.ingredients} steps={listItem.props.steps} credits={listItem.props.credits}></ResultListItem>;
+        let popout = <ResultListItem isModal={true} id={listItem.props.id} name={listItem.props.name} tags={listItem.props.tags} schemaTags={listItem.props.schemaTags} ingredients={listItem.props.ingredients} schemaIngredients={listItem.props.schemaIngredients} steps={listItem.props.steps} schemaSteps={listItem.props.schemaSteps} credits={listItem.props.credits} schemaCredits={listItem.props.schemaCredits} schemaImages={listItem.props.schemaImages} raw={listItem.props.raw}></ResultListItem>;
 
         return <Modal query={this.props.searchQuery} content={popout}></Modal>;
     }
@@ -81,25 +81,36 @@ class ResultList extends React.Component {
     getResultItems() {
         this.resultItems = this.state.results.map( (el) => {
             // Map the tests
+            let schemaTags = [];
             let tags = el.tag.map( (tag) => {
+                schemaTags.push(tag.name);
                 return <span key={tag.name} className="react-tagsinput-tag" onClick={(e)=>{e.stopPropagation(); e.preventDefault(); this.setFormTags([tag.name])}}>{tag.name}</span>
             } );
             // Map the ingredients display
+            let schemaIngredients = [];
             let ingredients = el.ingredient.map( (ingredient, index) => {
+                let schemaIngredient = [];
                 let options = ingredient.option.map( (option) => {
                     let allergens = option.allergen.map( (allergen) => {
                         return <span key={allergen.name} className="ResultListItemAllergen">{allergen.name}</span>
                     } ).reduce((acc, x) => acc === null ? [x] : [acc, ', ', x], null);
+                    schemaIngredient.push(option.quantity + " " + option.name);
                     return <span key={option.name} className="ResultListItemOption">
                         <span className="ResultListItemOptionName">{option.quantity + " " + option.name}</span>
                         <span className={"ResultListItemAllergens " + (!option.allergen.length ? "hidden" : "")}>({allergens})</span>
                     </span>
                 } ).reduce((acc, x, idx) => acc === null ? [x] : [acc, <b key={"bold--" + idx}> / </b>, x], null);
+                schemaIngredients.push( schemaIngredient.join(" / ") );
                 return <li key={index} className="ResultListItemIngredient">{options}</li>
             } );
             let credits;
+            let schemaCredits;
             if( el.credit ) {
                 let content = el.credit.name;
+                schemaCredits = {
+                    "@type": "Person",
+                    "name": el.credit.name
+                }
                 if( el.credit.link ) {
                     let link;
                     if( el.credit.link.match(/^http|^mailto/) ) {
@@ -112,18 +123,41 @@ class ResultList extends React.Component {
                         link = "https://" + el.credit.link;
                     }
                     content = <a onClick={(e) => e.stopPropagation()} target="_blank" rel="noopener noreferrer" href={link}>{content}</a>
+                    
+                    if( link.match(/^mailto:/) ) {
+                        schemaCredits.email = link.replace(/^mailto:/,"");
+                    }
+                    else {
+                        schemaCredits.url = link;
+                    }
                 }
                 credits = <span className="ResultListItemCredit">
                     {content}
                 </span>
             }
+            
+            let schemaSteps = [];
+            let stepsHtml = document.createElement("div");
+            stepsHtml.innerHTML = el.steps;
+            let steps = stepsHtml.querySelector("ul,ol");
+            if( steps ) {
+                schemaSteps = Array.from(steps.children).map(el => {
+                    return {
+                        "@type": "HowToStep",
+                        "text": el.innerText.trim()
+                    }
+                });
+            }
+            let schemaImages = Array.from(stepsHtml.querySelectorAll("img")).map(el => el.getAttribute("src"));
+            if( !schemaImages.length ) schemaImages.push("https://makingdorecipes.com/logo.png"); 
+
             return <Link key={el.id} to={"/recipe/"+el.id} onClick={(e) => {
                 if(this.getParentResultsFaded()) {
                     e.stopPropagation();
                     e.preventDefault();
                 }
             }}>
-                <ResultListItem isModal={false} id={el.id} name={el.name} tags={tags} ingredients={ingredients} steps={el.steps} credits={credits}></ResultListItem>
+                <ResultListItem isModal={false} id={el.id} name={el.name} tags={tags} schemaTags={schemaTags} ingredients={ingredients} schemaIngredients={schemaIngredients} steps={el.steps} schemaSteps={schemaSteps} credits={credits} schemaCredits={schemaCredits} schemaImages={schemaImages} raw={el}></ResultListItem>
             </Link>
         });
     }
