@@ -25,7 +25,9 @@
                             "milk, dairy",
                             "chickpea, garbanzo bean",
                             "chocolate, cocoa, cocao",
-                            "soy, soya, edamame, tofu"
+                            "soy, soya, edamame, tofu",
+                            "gluten => wheat, barley, rye",
+                            "canola, rapeseed"
                         ]
                     },
                     "english_stop": {
