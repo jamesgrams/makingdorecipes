@@ -374,11 +374,14 @@ class Search extends React.Component {
                             suggestions={this.state.recipeSuggestions}
                             shouldRenderSuggestions={(value) => value && value.trim().length > 2}
                             onSuggestionsFetchRequested={({value}) => {
-                                this.fetchRecipes(true).then( (json) => {
-                                    this.setState({
-                                        "recipeSuggestions": json.recipes.map(recipe => recipe.name)
-                                    })
-                                } );
+                                // while onchange will update the state, setState is async, so we need to make sure it is right here
+                                this.setState({search: value}, () => {
+                                    this.fetchRecipes(true).then( (json) => {
+                                        this.setState({
+                                            "recipeSuggestions": json.recipes.map(recipe => recipe.name)
+                                        })
+                                    } );
+                                });
                             }}
                             onSuggestionsClearRequested={() => { this.setState({ "recipeSuggestions": [] } ) }}
                             getSuggestionValue={(suggestion) => suggestion}
