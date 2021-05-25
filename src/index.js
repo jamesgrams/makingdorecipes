@@ -24,7 +24,7 @@ const path = require("path");
 
 const UPLOAD_DIR = "assets/public/uploads";
 if( !fs.existsSync(UPLOAD_DIR) ) fs.mkdirSync(UPLOAD_DIR);
-const upload = multer.diskStorage({
+const storage = multer.diskStorage({
     destination: function (req, file, cb) {
         cb(null, UPLOAD_DIR)
     },
@@ -32,6 +32,7 @@ const upload = multer.diskStorage({
         cb(null, uuid.v4() + path.extname(file.originalname));
     }
 });
+const upload = multer({ storage: storage });
 
 const PORT=process.env.PORT || 80;
 const ELASTICSEARCH_INDEX = "recipe";
