@@ -7,7 +7,7 @@
   "private": true,
   "scripts": {
     "start": "node src/index.js",
-    "postinstall": "cd assets && mkdir node_modules && npm install && npm run build"
+    "postinstall": "cd assets && mkdir -p node_modules && npm install && npm run build"
   },
   "dependencies": {
     "express": "^4.17.1",
