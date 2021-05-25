@@ -420,56 +420,7 @@ class Submit extends React.Component {
                     relative_urls : false,
                     remove_script_host : false,
                     convert_urls : true,
-                    images_upload_handler: function(blobInfo, success, failure, progress) {
-                        let xhr = new XMLHttpRequest();
-
-                        let blob = blobInfo.blob();
-                        //let name = blob.name;
-                        let type = blob.type;
-                        let extension = blobInfo.filename().replace(blobInfo.name(),"");
-                         
-                        xhr.open("GET", `/sign-s3?extension=${extension}`);
-                        xhr.onreadystatechange = () => {
-                            if( xhr.readyState === 4 ) {
-                                if( xhr.status === 200 ) {
-                                    let response = JSON.parse(xhr.responseText);
-                                    let formData = new FormData();
-                                    formData.append("Content-Type", type);
-                                    Object.entries(response.fields).forEach(([k, v]) => {
-                                        formData.append(k, v);
-                                    });
-                                    formData.append("file", blob);
-                                    
-                                    let xhr2 = new XMLHttpRequest();
-                                    xhr2.open("POST", response.url);
-                                    xhr2.onreadystatechange = () => {
-                                        if( xhr2.readyState === 4 ) {
-                                            if( xhr2.status === 204 ) {
-                                                success(response.url + "/" + response.fields.Key);
-                                            }
-                                            else {
-                                                failure(COULD_NOT_UPLOAD);
-                                            }
-                                        }
-                                    }
-                                    xhr2.onerror = function() {
-                                        failure(COULD_NOT_UPLOAD);
-                                    }
-                                    xhr2.upload.onprogress = function (e) {
-                                        progress(e.loaded / e.total * 100);
-                                    };
-                                    xhr2.send(formData);
-                                }
-                                else {
-                                    failure(COULD_NOT_UPLOAD);
-                                }
-                            }
-                        };
-                        xhr.onerror = function() {
-                            failure(COULD_NOT_UPLOAD);
-                        }
-                        xhr.send();
-                    }
+                    images_upload_url: "/upload"
                 }}
                 apiKey={process.env.REACT_APP_TINY_KEY}
             >

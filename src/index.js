@@ -13,13 +13,25 @@ const cookieParser = require("cookie-parser");
 const pluralize = require("pluralize");
 const striptags = require("striptags");
 const fs = require("fs");
-const aws = require('aws-sdk');
-const { v1: uuidv1 } = require('uuid');
 const sanitizeHtml = require('sanitize-html');
 const { parse } = require('node-html-parser');
 const compression = require('compression');
 const nodemailer = require('nodemailer');
 const jsontoxml = require('jsontoxml');
+const multer = require("multer");
+const uuid = require("uuid");
+const path = require("path");
+
+const UPLOAD_DIR = "assets/public/uploads";
+if( !fs.existsSync(UPLOAD_DIR) ) fs.mkdirSync(UPLOAD_DIR);
+const upload = multer.diskStorage({
+    destination: function (req, file, cb) {
+        cb(null, UPLOAD_DIR)
+    },
+    filename: function (req, file, cb) {
+        cb(null, uuid.v4() + path.extname(file.originalname));
+    }
+});
 
 const PORT=process.env.PORT || 80;
 const ELASTICSEARCH_INDEX = "recipe";
@@ -43,7 +55,6 @@ const BAD_REQUEST = "Bad Request";
 const REPLACE_TITLE_PLACEHOLDER = "REPLACE_TITLE_PLACEHOLDER";
 const REPLACE_DESCRIPTION_PLACEHOLDER = "REPLACE_DESCRIPRION_PLACEHOLDER";
 const OG_PLACEHOLDER = "OG_PLACEHOLDER";
-const AWS_S3_BUCKET=process.env.AWS_S3_BUCKET;
 const SUGGESTABLE_REPLACE = {
     "molass": "molasses",
     "blackstrap molass": "blackstrap molasses"
@@ -55,8 +66,6 @@ let indexFile = fs.readFileSync("assets/build/index.html").toString(); // keep t
 indexFile = indexFile.replace(/(?<=<title>)[^<]+(?=<\/title>)/,REPLACE_TITLE_PLACEHOLDER);
 indexFile = indexFile.replace(/(?<=<meta name="description" content=")[^"]+/,REPLACE_DESCRIPTION_PLACEHOLDER);
 indexFile = indexFile.replace(/(?=<\/head>)+/,OG_PLACEHOLDER);
-
-aws.config.region = "us-east-1";
 
 const client = new elasticsearch.Client({
     host: process.env.ELASTICSEARCH_HOST,
@@ -273,29 +282,18 @@ app.get("/unsubscribe", async function(request, response) {
 });
 
 // Respond to upload requests for images
-app.get("/sign-s3", (req,res) => {
-    let s3 = new aws.S3();
-    let fileName = uuidv1() + req.query['extension'];
-    //let fileType = req.query['type'];
-    let s3Params = {
-        Bucket: AWS_S3_BUCKET,
-        Fields: {
-            Key: fileName,
-            acl: "public-read"
-        },
-        Expires: 60,
-        Conditions: [
-            {'acl': 'public-read'},
-			["content-length-range", 0, 3000000], // content length restrictions: 0-3MB
-            ["starts-with", "$Content-Type", "image/"] // content type restriction
-		]
-    };
-
-    let data = s3.createPresignedPost(s3Params);
-
-    res.json(data);
-    res.end();
-});
+app.post("/upload", upload.single('file'), async function(request, response) { 
+    console.log( "serving /upload" );
+    try {
+        writeResponse(response, SUCCESS, {
+            "location": "/" + UPLOAD_DIR + "/" + this.request.file.filename
+        });
+    }
+    catch(err) {
+        console.log(err);
+        writeResponse(response, FAILURE, null, HTTP_SEMANTIC_ERROR);
+    }
+} );
 
 //The 404 Route (ALWAYS Keep this as the last route)
 app.get('*', function(req, res){
@@ -1041,10 +1039,8 @@ async function indexRecipe( id, name, tag, steps, approved, ingredient, credit )
     });
     let testSteps = parse( `<div>${steps}</div>` );
     let images = testSteps.querySelectorAll("img");
-    let s3Regex = new RegExp("^https://s3\\.amazonaws\\.com/"+AWS_S3_BUCKET+"/.*\\.(png|jpg|jpeg|gif)","ig");
-    let s3Regex2 = new RegExp("^https://"+AWS_S3_BUCKET+"\\.s3\\.amazonaws\\.com/.*\\.(png|jpg|jpeg|gif)","ig");
     for( let image of images ) {
-        if( !image.getAttribute("src").match(s3Regex) && !image.getAttribute("src").match(s3Regex2) ) {
+        if( !image.getAttribute("src").match(/^\/assets\/public\/uploads\/.*\.(png|jpg|jpeg|gif)/i) ) {
             return Promise.reject(BAD_REQUEST);
         }
     }

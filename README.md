@@ -18,9 +18,6 @@ An Elasticsearch and React App to find and share recipes for people with allergi
 * `REACT_APP_GA_TRACKER` - Google Analytics tracking code
 * `NODE_ENV` - Set to to `development` to avoid the HTTPS redirect
 * `PORT` - Completely optional - sets the port of the Express server
-* `AWS_ACCESS_KEY_ID` - Access key for image uploads to Amazon S3
-* `AWS_SECRET_ACCESS_KEY` - Secret access key for AWS
-* `AWS_S3_BUCKET` - The name of the AWS S3 bucket to put images in
 * `MAILER_EMAIL` - The email address to send emails from
 * `MAILER_PASSWORD` - The password of the email to send emails from
 * `MAILER_HOST` - The SMTP host to send emails from
