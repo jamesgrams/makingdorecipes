@@ -4,7 +4,7 @@ npm-debug.log
 .env
 
 /assets/public/sitemap.xml
-/assets/public/uploads/*
+/uploads/*
 
 # dependencies
 /assets/node_modules
