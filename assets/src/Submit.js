@@ -6,7 +6,6 @@ import Autosuggest from 'react-autosuggest'
 import Helmet from 'react-helmet'
 
 const COULD_NOT_SUBMIT = "An error ocurred. Please try again later.";
-const COULD_NOT_UPLOAD = "Could not upload image. Please try again later.";
 
 class Submit extends React.Component {
 
