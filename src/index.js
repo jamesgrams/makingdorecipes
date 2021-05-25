@@ -287,7 +287,7 @@ app.post("/upload", upload.single('file'), async function(request, response) {
     console.log( "serving /upload" );
     try {
         writeResponse(response, SUCCESS, {
-            "location": "/" + UPLOAD_DIR + "/" + request.file.filename
+            "location": "/uploads/" + request.file.filename
         });
     }
     catch(err) {
