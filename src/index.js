@@ -77,7 +77,7 @@ app.use(compression());
 app.use((req,res,next) => {
     // HTTPs
     if (!req.secure && req.get('x-forwarded-proto') !== 'https' && process.env.NODE_ENV !== "development") {
-        return res.redirect(HTTP_REDIRECT, 'https://' + req.get('host') + req.url);
+        //return res.redirect(HTTP_REDIRECT, 'https://' + req.get('host') + req.url);
     }
     // www
     if (req.header("host").slice(0, 4) === 'www.') {
