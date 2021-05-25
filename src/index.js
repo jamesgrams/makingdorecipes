@@ -1041,7 +1041,7 @@ async function indexRecipe( id, name, tag, steps, approved, ingredient, credit )
     let testSteps = parse( `<div>${steps}</div>` );
     let images = testSteps.querySelectorAll("img");
     for( let image of images ) {
-        if( !image.getAttribute("src").match(/^\/assets\/public\/uploads\/.*\.(png|jpg|jpeg|gif)/i) ) {
+        if( !image.getAttribute("src").match(/^\/uploads\/.*\.(png|jpg|jpeg|gif)/i) ) {
             return Promise.reject(BAD_REQUEST);
         }
     }
