@@ -22,7 +22,7 @@ const multer = require("multer");
 const uuid = require("uuid");
 const path = require("path");
 
-const UPLOAD_DIR = "assets/public/uploads";
+const UPLOAD_DIR = "uploads";
 if( !fs.existsSync(UPLOAD_DIR) ) fs.mkdirSync(UPLOAD_DIR);
 const storage = multer.diskStorage({
     destination: function (req, file, cb) {
@@ -93,6 +93,7 @@ app.use((req,res,next) => {
 });
 app.use( express.json() );
 app.use(cookieParser());
+app.use("/" + UPLOAD_DIR, express.static(UPLOAD_DIR));
 app.use("/", express.static("assets/build"));
 app.use("/add", express.static("assets/build/index.html"));
 app.use("/disclaimer", express.static("assets/build/index.html"));
@@ -287,7 +288,7 @@ app.post("/upload", upload.single('file'), async function(request, response) {
     console.log( "serving /upload" );
     try {
         writeResponse(response, SUCCESS, {
-            "location": "/uploads/" + request.file.filename
+            "location": "/" + UPLOAD_DIR + "/" + request.file.filename
         });
     }
     catch(err) {
@@ -1041,7 +1042,7 @@ async function indexRecipe( id, name, tag, steps, approved, ingredient, credit )
     let testSteps = parse( `<div>${steps}</div>` );
     let images = testSteps.querySelectorAll("img");
     for( let image of images ) {
-        if( !image.getAttribute("src").match(/^\/uploads\/.*\.(png|jpg|jpeg|gif)/i) ) {
+        if( !image.getAttribute("src").match(new RegExp("^\\/"+UPLOAD_DIR+"\\/.*\\.(png|jpg|jpeg|gif)$","i") ) ) {
             return Promise.reject(BAD_REQUEST);
         }
     }
