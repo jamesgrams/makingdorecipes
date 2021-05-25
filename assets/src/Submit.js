@@ -416,8 +416,8 @@ class Submit extends React.Component {
                     valid_elements: "ul,ol,li,p,pre,blockquote,div,span,br,sub,em,strong,sup,code,h1,h2,h3,h4,h5,h6,img[*]",
                     font_formats: "Merriweather=merriweather",
                     content_style: "body {font-family:Merriweather;font-size:16px}",
-                    relative_urls : false,
-                    remove_script_host : false,
+                    relative_urls : true,
+                    remove_script_host : true,
                     convert_urls : true,
                     images_upload_url: "/upload"
                 }}
