@@ -22,6 +22,16 @@ class App extends React.Component {
             </div>
             <footer>
                 &copy; {new Date().getFullYear()} Making Do Recipes * <a href='mailto:admin@makingdorecipes.com'>Contact Us</a> * <Link to="/about">About</Link> * <Link to="/instructions">Instructions</Link> * <Link to="/disclaimer">Disclaimer</Link> * <a href='https://www.facebook.com/makingdorecipes' rel="noopener noreferrer" target="_blank">Facebook</a>
+                <div className="featured">
+                    <div>Featured by:</div>
+                    <a href="https://fpiesfoundation.org/interview-with-making-do-recipes" target="_blank" rel="noopener noreferrer">
+                        <picture>
+                            <source srcSet="/thefpiesfoundation.webp" type="image/webp"/>
+                            <source srcSet="/thefpiesfoundation.png" type="image/png"/>
+                            <img alt="The FPIES Foundation logo" src="/thefpiesfoundation.png"/>
+                        </picture>
+                    </a>
+                </div>
             </footer>
         </Router>
     }

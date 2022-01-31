@@ -163,6 +163,18 @@ footer > a {
     color: grey;
 }
 
+footer .featured {
+    margin-top: 10px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+footer .featured img {
+    height: 50px;
+    margin-left: 10px;
+}
+
 .loading { 
     color: grey;
     text-align: center;
